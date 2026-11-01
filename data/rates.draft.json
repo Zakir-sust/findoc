@@ -1,0 +1,150 @@
+{
+  "_status": "UNVERIFIED DRAFT. Written by the agent from memory, NOT checked against the treaty texts. Do not use for answers until every row has verified=true.",
+  "_howToVerify": "For each row open the sourceFile (./scripts/download-sources.sh puts it in sources/), find the article + paragraph, check the rate and condition, fix anything wrong, set verified=true and fill verifiedNote. Where a protocol changed the rate, check the protocol too. Then rename this file to rates.json.",
+  "_shape": "One row per (treaty, incomeType). rate = the general (highest) treaty rate in %; reducedRates = lower rates and when they apply. Countries are ISO 3166-1 alpha-2 codes.",
+  "rows": [
+    {
+      "countryA": "US", "countryB": "GB", "incomeType": "dividends",
+      "rate": 15,
+      "reducedRates": [
+        { "rate": 5, "condition": "Beneficial owner is a company owning at least 10% of the voting stock of the paying company" },
+        { "rate": 0, "condition": "Company owning 80%+ of the voting power for 12 months and meeting the limitation-on-benefits tests; also certain pension schemes" }
+      ],
+      "article": "Article 10", "paragraph": "2-3",
+      "sourceFiles": ["us-uk-2001.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "GB", "incomeType": "interest",
+      "rate": 0,
+      "reducedRates": [],
+      "article": "Article 11", "paragraph": "1",
+      "notes": "Exempt in the source state; exceptions for contingent interest and REMIC excess inclusions (check paragraph numbers).",
+      "sourceFiles": ["us-uk-2001.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "GB", "incomeType": "royalties",
+      "rate": 0,
+      "reducedRates": [],
+      "article": "Article 12", "paragraph": "1",
+      "sourceFiles": ["us-uk-2001.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "DE", "incomeType": "dividends",
+      "rate": 15,
+      "reducedRates": [
+        { "rate": 5, "condition": "Beneficial owner is a company owning at least 10% of the voting stock" },
+        { "rate": 0, "condition": "Company owning 80%+ of the voting stock for 12 months (added by the 2006 protocol), plus pension funds" }
+      ],
+      "article": "Article 10", "paragraph": "2-3",
+      "sourceFiles": ["us-germany-1989.pdf", "us-germany-protocol-2006.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "DE", "incomeType": "interest",
+      "rate": 0,
+      "reducedRates": [],
+      "article": "Article 11", "paragraph": "1",
+      "sourceFiles": ["us-germany-1989.pdf", "us-germany-protocol-2006.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "DE", "incomeType": "royalties",
+      "rate": 0,
+      "reducedRates": [],
+      "article": "Article 12", "paragraph": "1",
+      "sourceFiles": ["us-germany-1989.pdf", "us-germany-protocol-2006.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "IN", "incomeType": "dividends",
+      "rate": 25,
+      "reducedRates": [
+        { "rate": 15, "condition": "Beneficial owner is a company owning at least 10% of the voting stock" }
+      ],
+      "article": "Article 10", "paragraph": "2",
+      "sourceFiles": ["us-india-1989.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "IN", "incomeType": "interest",
+      "rate": 15,
+      "reducedRates": [
+        { "rate": 10, "condition": "Interest beneficially owned by a bank or similar financial institution (incl. insurance companies)" },
+        { "rate": 0, "condition": "Certain government / central bank interest (check paragraph 3)" }
+      ],
+      "article": "Article 11", "paragraph": "2-3",
+      "sourceFiles": ["us-india-1989.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "IN", "incomeType": "royalties",
+      "rate": 15,
+      "reducedRates": [
+        { "rate": 10, "condition": "Payments for the use of industrial, commercial or scientific equipment (and ancillary fees for included services)" }
+      ],
+      "article": "Article 12", "paragraph": "2",
+      "notes": "Article 12 also covers 'fees for included services'; the title is 'Royalties and Fees for Included Services'.",
+      "sourceFiles": ["us-india-1989.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "JP", "incomeType": "dividends",
+      "rate": 10,
+      "reducedRates": [
+        { "rate": 5, "condition": "Beneficial owner is a company owning at least 10% of the voting stock" },
+        { "rate": 0, "condition": "Company owning 50%+ of the voting stock for a holding period (12 months in 2003 text; the 2013 protocol shortened it to 6 months), plus pension funds" }
+      ],
+      "article": "Article 10", "paragraph": "2-3",
+      "sourceFiles": ["us-japan-2003.pdf", "us-japan-protocol-2013.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "JP", "incomeType": "interest",
+      "rate": 0,
+      "reducedRates": [],
+      "article": "Article 11", "paragraph": "1-2",
+      "notes": "2003 text: 10% with exemptions. The 2013 protocol (in force 2019) made interest generally exempt; contingent interest can still be taxed (10%). Check which text applies.",
+      "sourceFiles": ["us-japan-2003.pdf", "us-japan-protocol-2013.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "JP", "incomeType": "royalties",
+      "rate": 0,
+      "reducedRates": [],
+      "article": "Article 12", "paragraph": "1",
+      "sourceFiles": ["us-japan-2003.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "BD", "incomeType": "dividends",
+      "rate": 15,
+      "reducedRates": [
+        { "rate": 10, "condition": "Beneficial owner is a company owning at least 10% of the voting stock" }
+      ],
+      "article": "Article 10", "paragraph": "2",
+      "sourceFiles": ["us-bangladesh-2004.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "BD", "incomeType": "interest",
+      "rate": 10,
+      "reducedRates": [
+        { "rate": 0, "condition": "Interest paid to or guaranteed by a government, political subdivision or central bank (check paragraph 3)" }
+      ],
+      "article": "Article 11", "paragraph": "2-3",
+      "sourceFiles": ["us-bangladesh-2004.pdf"],
+      "verified": false, "verifiedNote": null
+    },
+    {
+      "countryA": "US", "countryB": "BD", "incomeType": "royalties",
+      "rate": 10,
+      "reducedRates": [],
+      "article": "Article 12", "paragraph": "2",
+      "sourceFiles": ["us-bangladesh-2004.pdf"],
+      "verified": false, "verifiedNote": null
+    }
+  ]
+}
