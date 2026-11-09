@@ -30,6 +30,21 @@ public static class DocumentEndpoints
         if (!Path.GetExtension(file.FileName).Equals(".pdf", StringComparison.OrdinalIgnoreCase))
             return Results.BadRequest("Only .pdf files are accepted.");
 
+        // The extension can be faked: a real PDF starts with the bytes "%PDF-".
+        // OpenReadStream() starts from the beginning each time, so SaveAsync below still gets the whole file.
+        await using var fileStream = file.OpenReadStream();
+        var header = new byte[5];
+        var readBytes = await fileStream.ReadAtLeastAsync(header, 5, false, ct);
+        if (readBytes < 5)
+        {
+            return Results.BadRequest("Invalid file");
+        }
+
+        if (!header.AsSpan().SequenceEqual("%PDF-"u8))
+        {
+            return Results.BadRequest("Not a valid pdf file");
+        }
+
         var id = Guid.NewGuid();
         var storagePath = await fileStore.SaveAsync(id, file, ct);
 
