@@ -1,0 +1,217 @@
+{
+  "_status": "UNVERIFIED DRAFT. 30 questions written by the agent from memory. Article numbers and facts are NOT checked against the treaty texts. Verify every item (block C20) before using it for hit-rate@5 or quality evals.",
+  "_howToVerify": "For each item open expected.sourceFile in sources/, confirm the article and every keyFact, fix or replace the item, set verified=true. Remove items you can't verify. Then rename this file to golden.json.",
+  "_shape": "expected.treaty matches a file name in scripts/download-sources.sh (without .pdf). expected.article is what a correct citation should point to. keyFacts are what a good answer must contain.",
+  "items": [
+    {
+      "id": "g01",
+      "question": "What is the maximum withholding tax rate on dividends paid by a US company to a UK resident individual?",
+      "expected": { "treaty": "us-uk-2001", "article": "Article 10" },
+      "keyFacts": ["15% general rate on dividends", "lower rates apply only to company shareholders meeting ownership thresholds"],
+      "verified": false
+    },
+    {
+      "id": "g02",
+      "question": "Under the US-UK treaty, when can dividends paid to a parent company be exempt from source-country tax?",
+      "expected": { "treaty": "us-uk-2001", "article": "Article 10" },
+      "keyFacts": ["0% rate", "parent owns at least 80% of the voting power", "12-month holding period", "must satisfy the limitation-on-benefits article"],
+      "verified": false
+    },
+    {
+      "id": "g03",
+      "question": "How is interest paid from the US to a UK resident taxed under the US-UK treaty?",
+      "expected": { "treaty": "us-uk-2001", "article": "Article 11" },
+      "keyFacts": ["taxable only in the state of residence (0% at source)", "exceptions for contingent interest"],
+      "verified": false
+    },
+    {
+      "id": "g04",
+      "question": "What rate applies to royalties paid by a UK company to a US resident beneficial owner?",
+      "expected": { "treaty": "us-uk-2001", "article": "Article 12" },
+      "keyFacts": ["0%: royalties taxable only in the residence state", "applies to the beneficial owner"],
+      "verified": false
+    },
+    {
+      "id": "g05",
+      "question": "How long must a building site last to create a permanent establishment under the US-UK treaty?",
+      "expected": { "treaty": "us-uk-2001", "article": "Article 5" },
+      "keyFacts": ["more than twelve months"],
+      "verified": false
+    },
+    {
+      "id": "g06",
+      "question": "How does the US-UK treaty decide residence for an individual who is resident in both countries?",
+      "expected": { "treaty": "us-uk-2001", "article": "Article 4" },
+      "keyFacts": ["tie-breaker tests in order: permanent home, centre of vital interests, habitual abode, nationality", "then mutual agreement of the competent authorities"],
+      "verified": false
+    },
+    {
+      "id": "g07",
+      "question": "What withholding rate applies to dividends paid by a German company to a US company that owns 10% of its voting stock?",
+      "expected": { "treaty": "us-germany-1989", "article": "Article 10" },
+      "keyFacts": ["5% for companies owning at least 10% of the voting stock", "15% otherwise"],
+      "verified": false
+    },
+    {
+      "id": "g08",
+      "question": "What did the 2006 protocol to the US-Germany treaty change for intercompany dividends?",
+      "expected": { "treaty": "us-germany-protocol-2006", "article": "Article 10" },
+      "keyFacts": ["introduced a 0% rate on dividends", "for companies owning at least 80% of the voting stock for 12 months", "subject to limitation on benefits"],
+      "verified": false
+    },
+    {
+      "id": "g09",
+      "question": "Is interest paid from Germany to a US resident subject to German withholding tax under the treaty?",
+      "expected": { "treaty": "us-germany-1989", "article": "Article 11" },
+      "keyFacts": ["interest taxable only in the residence state (0% at source)", "exceptions such as contingent or profit-participating interest"],
+      "verified": false
+    },
+    {
+      "id": "g10",
+      "question": "What rate does the US-Germany treaty set for royalties?",
+      "expected": { "treaty": "us-germany-1989", "article": "Article 12" },
+      "keyFacts": ["0%: royalties taxable only in the residence state of the beneficial owner"],
+      "verified": false
+    },
+    {
+      "id": "g11",
+      "question": "Which article of the US-Germany treaty limits treaty benefits to qualified residents?",
+      "expected": { "treaty": "us-germany-1989", "article": "Article 28" },
+      "keyFacts": ["Limitation on Benefits article", "tests such as publicly traded company, ownership/base erosion, active trade or business"],
+      "verified": false
+    },
+    {
+      "id": "g12",
+      "question": "What are the dividend withholding rates under the US-India treaty?",
+      "expected": { "treaty": "us-india-1989", "article": "Article 10" },
+      "keyFacts": ["15% if the beneficial owner is a company owning at least 10% of the voting stock", "25% in other cases"],
+      "verified": false
+    },
+    {
+      "id": "g13",
+      "question": "What rate applies to interest paid from India to a US bank under the treaty?",
+      "expected": { "treaty": "us-india-1989", "article": "Article 11" },
+      "keyFacts": ["10% when beneficially owned by a bank or similar financial institution", "15% in other cases"],
+      "verified": false
+    },
+    {
+      "id": "g14",
+      "question": "How are fees for included services taxed under the US-India treaty?",
+      "expected": { "treaty": "us-india-1989", "article": "Article 12" },
+      "keyFacts": ["covered by Article 12 together with royalties", "taxed at source at up to 15% (10% for services ancillary to equipment rental)", "'make available' requirement for technical knowledge"],
+      "verified": false
+    },
+    {
+      "id": "g15",
+      "question": "When does furnishing services create a permanent establishment under the US-India treaty?",
+      "expected": { "treaty": "us-india-1989", "article": "Article 5" },
+      "keyFacts": ["services through employees for more than 90 days in a 12-month period", "or services to a related enterprise (check exact wording)"],
+      "verified": false
+    },
+    {
+      "id": "g16",
+      "question": "How long must a construction project last to create a permanent establishment under the US-India treaty?",
+      "expected": { "treaty": "us-india-1989", "article": "Article 5" },
+      "keyFacts": ["more than 120 days in a twelve-month period"],
+      "verified": false
+    },
+    {
+      "id": "g17",
+      "question": "What withholding rate applies to dividends paid by a Japanese company to a US company owning 10% of its voting stock?",
+      "expected": { "treaty": "us-japan-2003", "article": "Article 10" },
+      "keyFacts": ["5% for at least 10% voting stock", "10% general rate"],
+      "verified": false
+    },
+    {
+      "id": "g18",
+      "question": "How did the 2013 protocol to the US-Japan treaty change the taxation of interest?",
+      "expected": { "treaty": "us-japan-protocol-2013", "article": "Article 11" },
+      "keyFacts": ["interest generally exempt from source-country tax", "replaces the 10% rate in the 2003 treaty", "exceptions such as contingent interest"],
+      "verified": false
+    },
+    {
+      "id": "g19",
+      "question": "What rate does the US-Japan treaty set for royalties?",
+      "expected": { "treaty": "us-japan-2003", "article": "Article 12" },
+      "keyFacts": ["0%: royalties taxable only in the residence state of the beneficial owner"],
+      "verified": false
+    },
+    {
+      "id": "g20",
+      "question": "Under the 2013 protocol, what holding conditions give a 0% rate on US-Japan parent-subsidiary dividends?",
+      "expected": { "treaty": "us-japan-protocol-2013", "article": "Article 10" },
+      "keyFacts": ["company owning at least 50% of the voting stock", "holding period shortened to 6 months", "limitation-on-benefits conditions"],
+      "verified": false
+    },
+    {
+      "id": "g21",
+      "question": "What withholding rate applies to dividends paid by a Bangladeshi company to a US company owning 10% of its voting stock?",
+      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 10" },
+      "keyFacts": ["10% for companies owning at least 10% of the voting stock", "15% in other cases"],
+      "verified": false
+    },
+    {
+      "id": "g22",
+      "question": "What is the treaty rate on interest paid from Bangladesh to a US resident?",
+      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 11" },
+      "keyFacts": ["10% of the gross amount", "exemption for interest paid to governments / central banks"],
+      "verified": false
+    },
+    {
+      "id": "g23",
+      "question": "What is the maximum rate on royalties under the US-Bangladesh treaty?",
+      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 12" },
+      "keyFacts": ["10% of the gross amount of the royalties"],
+      "verified": false
+    },
+    {
+      "id": "g24",
+      "question": "How does the US-Bangladesh treaty define a permanent establishment?",
+      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 5" },
+      "keyFacts": ["fixed place of business through which the business is carried on", "includes a place of management, branch, office, factory, mine", "building site threshold (check the number of days/months)"],
+      "verified": false
+    },
+    {
+      "id": "g25",
+      "question": "In the 2016 US Model treaty, how long must a building site or construction project last to be a permanent establishment?",
+      "expected": { "treaty": "us-model-2016", "article": "Article 5" },
+      "keyFacts": ["more than twelve months"],
+      "verified": false
+    },
+    {
+      "id": "g26",
+      "question": "What does the 2016 US Model treaty provide for interest paid to a resident of the other state?",
+      "expected": { "treaty": "us-model-2016", "article": "Article 11" },
+      "keyFacts": ["taxable only in the residence state", "special rules that deny benefits for interest benefiting from a special tax regime (check wording)"],
+      "verified": false
+    },
+    {
+      "id": "g27",
+      "question": "Which article of the 2016 US Model covers limitation on benefits, and what is its purpose?",
+      "expected": { "treaty": "us-model-2016", "article": "Article 22" },
+      "keyFacts": ["Limitation on Benefits", "prevents treaty shopping by residents of third states", "qualified person tests, active trade or business test, derivative benefits"],
+      "verified": false
+    },
+    {
+      "id": "g28",
+      "question": "Under the UN Model Convention 2017, when does furnishing services create a permanent establishment?",
+      "expected": { "treaty": "un-model-2017", "article": "Article 5" },
+      "keyFacts": ["services through employees for more than 183 days in any 12-month period", "paragraph 3(b)"],
+      "verified": false
+    },
+    {
+      "id": "g29",
+      "question": "What new article on fees for technical services was added to the UN Model in 2017?",
+      "expected": { "treaty": "un-model-2017", "article": "Article 12A" },
+      "keyFacts": ["Article 12A", "allows source taxation of fees for technical services", "rate left to bilateral negotiation"],
+      "verified": false
+    },
+    {
+      "id": "g30",
+      "question": "Does the UN Model 2017 fix a withholding rate for royalties?",
+      "expected": { "treaty": "un-model-2017", "article": "Article 12" },
+      "keyFacts": ["no fixed rate: the percentage is left to bilateral negotiation", "allows source-state taxation of royalties (unlike the OECD Model)"],
+      "verified": false
+    }
+  ]
+}
