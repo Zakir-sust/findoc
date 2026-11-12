@@ -10,7 +10,7 @@ builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(Rab
 
 builder.Services.AddSingleton<PdfTextExtractor>();
 builder.Services.AddScoped<DocumentIngestor>();
-// TODO(C08/C09 — Jakir): register the IChunker and the embedding generator here.
+// TODO(C09 — Jakir): register the IChunker (ArticleChunker, from C08) and the embedding generator here.
 
 builder.Services.AddHostedService<IngestWorker>();
 

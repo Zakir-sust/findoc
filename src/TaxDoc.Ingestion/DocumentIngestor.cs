@@ -39,8 +39,8 @@ public sealed class DocumentIngestor(
                 fullText.Length, text.Pages.Count, document.FileName, documentId);
 
             // ---------------------------------------------------------------------------------
-            // 2. TODO(C08 — Jakir, by hand): chunk the text with an IChunker (TaxDoc.Core/Chunking).
-            //      var textChunks = chunker.Chunk(fullText);
+            // 2. TODO(C09 — Jakir): chunk the pages with the IChunker (ArticleChunker, built in C08).
+            //      var textChunks = chunker.Chunk(text.Pages, treaty);   // treaty: e.g. the file name without ".pdf"
             //
             // 3. TODO(C09 — Jakir, by hand): embed each chunk (IEmbeddingGenerator, Ollama
             //    qwen3-embedding:0.6b → 1024 dims) and add Chunk rows with Embedding set:
