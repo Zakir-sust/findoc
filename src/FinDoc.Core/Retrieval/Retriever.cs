@@ -6,10 +6,10 @@ using FinDoc.Core.Data;
 
 namespace FinDoc.Core.Retrieval;
 
-/// <summary>One search hit: which treaty and article it comes from, its text, and how close it is to the question.</summary>
-/// <param name="Treaty">The file name without ".pdf", e.g. "us-bangladesh-2004".</param>
+/// <summary>One search hit: which report and item it comes from, its text, and how close it is to the question.</summary>
+/// <param name="Report">The file name without ".pdf", e.g. "apple-fy2026".</param>
 /// <param name="Score">Cosine similarity = 1 − cosine distance: 1 = same direction, 0 = unrelated.</param>
-public record RetrievedChunk(string Treaty, string? Article, string Content, double Score);
+public record RetrievedChunk(string Report, string? Item, string Content, double Score);
 
 /// <summary>
 /// Finds the chunks closest to a question: embed the question with the same model as the chunks,
@@ -26,7 +26,7 @@ public class Retriever
         _generator = generator;
     }
 
-    public async Task<List<RetrievedChunk>> SearchAsync(string question, int k = 5, string? treaty = null, CancellationToken ct = default)
+    public async Task<List<RetrievedChunk>> SearchAsync(string question, int k = 5, string? report = null, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(question);
         ArgumentOutOfRangeException.ThrowIfLessThan(k, 1);
@@ -39,11 +39,11 @@ public class Retriever
         // 2. Only chunks that have an embedding.
         var chunks = _db.Chunks.Where(x => x.Embedding != null);
 
-        // 3. Optional treaty filter. The treaty isn't a column: the worker takes it from the file name.
-        //    Built outside the lambda for readability: EF would turn treaty + ".pdf" into one SQL parameter either way.
-        if (treaty is not null)
+        // 3. Optional report filter. The report isn't a column: the worker takes it from the file name.
+        //    Built outside the lambda for readability: EF would turn report + ".pdf" into one SQL parameter either way.
+        if (report is not null)
         {
-            var fileName = treaty + ".pdf";
+            var fileName = report + ".pdf";
             chunks = chunks.Where(x => x.Document.FileName == fileName);
         }
 
@@ -54,7 +54,7 @@ public class Retriever
             .Select(x => new
             {
                 x.Document.FileName,
-                x.Article,
+                x.Item,
                 x.Content,
                 Distance = x.Embedding!.CosineDistance(queryVector),
             })
@@ -63,7 +63,7 @@ public class Retriever
         // 5. Shape the result in memory (Path.GetFileNameWithoutExtension has no SQL translation).
         return rows
             .Select(r => new RetrievedChunk(
-                Path.GetFileNameWithoutExtension(r.FileName), r.Article, r.Content, 1 - r.Distance))
+                Path.GetFileNameWithoutExtension(r.FileName), r.Item, r.Content, 1 - r.Distance))
             .ToList();
     }
 }

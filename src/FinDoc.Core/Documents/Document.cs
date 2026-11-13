@@ -1,11 +1,11 @@
 namespace FinDoc.Core.Documents;
 
-/// <summary>An uploaded treaty PDF and where it is in the ingestion pipeline.</summary>
+/// <summary>An uploaded annual-report (10-K) PDF and where it is in the ingestion pipeline.</summary>
 public class Document
 {
     public Guid Id { get; set; }
 
-    /// <summary>The original file name, e.g. "Treaty-UK-7-24-2001.pdf".</summary>
+    /// <summary>The original file name, e.g. "apple-fy2026.pdf".</summary>
     public required string FileName { get; set; }
 
     /// <summary>Absolute path of the stored PDF (the API writes it, the worker reads it).</summary>

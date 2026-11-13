@@ -1,36 +1,42 @@
-# FinDoc Assistant — RAG over public tax treaties in .NET (Stage C)
+# FinDoc Assistant — RAG over public company annual reports (10-K) in .NET (Stage C)
 
-Status: **scaffold (block C07)**. Upload → queue → worker → PdfPig text works. Chunking (C08) and embeddings (C09) are TODOs.
+Ask questions about four companies' latest annual reports (Apple, Alphabet, Amazon, Tesla) and get answers that cite
+the report and the 10-K item they came from, e.g. `[apple-fy2026, Item 7]`. Anyone can check an answer: open the PDF at
+the cited page and read the number.
+
+Status: ingestion works end to end (upload → RabbitMQ → worker → PdfPig text → 10-K item chunks → embeddings in
+pgvector), retrieval with a report filter works, `/chat` streams a stub answer. Retrieval + citations go into `/chat` next (C12–C13).
 
 ## Layout
 | Path | What |
 |---|---|
 | `src/FinDoc.Api` | Minimal API: `POST /documents` (multipart PDF upload), `GET /documents/{id}`, `POST /chat` (SSE stream). Applies EF migrations on start. |
-| `src/FinDoc.Ingestion` | Worker: consumes RabbitMQ `ingest`, extracts text with PdfPig, saves to Postgres, acks after the commit. |
-| `src/FinDoc.Core` | EF Core model (`Document`, `Chunk` with `vector(1024)` + HNSW cosine index), messaging contract, `IChunker` (TODO C08). |
-| `tests/FinDoc.Tests` | xUnit tests. |
-| `evals/` | `golden.draft.json` — 30 questions, **unverified draft**. |
-| `data/` | `rates.draft.json` — 5 treaties × 3 income types, **unverified draft**. |
-| `scripts/download-sources.sh` | Downloads the public treaty PDFs into `sources/` (gitignored; PDFs are never committed). |
+| `src/FinDoc.Ingestion` | Worker: consumes RabbitMQ `ingest`, extracts text with PdfPig, chunks by 10-K item, embeds in batches of 32, saves to Postgres, acks after the commit. |
+| `src/FinDoc.Core` | EF Core model (`Document`, `Chunk` with `vector(1024)` + HNSW cosine index), `ItemChunker`, `Retriever` (pgvector top-k + report filter), messaging contract. |
+| `tests/FinDoc.Tests` | xUnit tests. `Category=Integration` ones need the local stack + Ollama. |
+| `evals/` | `golden.draft.json`: 30 questions with the PDF page of each answer, **draft until checked**. |
+| `data/` | `metrics.draft.json`: 4 companies × revenue, net income, R&D, employees, with pages, **draft until checked**. |
+| `scripts/download-sources.sh` | Downloads the four 10-K PDFs from the companies' investor-relations sites into `sources/` (gitignored; PDFs are never committed). |
 | `docs/learned.md` | Learn-backs. |
 
 Target framework: `net9.0` (set once in `Directory.Build.props`).
 
 ## Run it
-Prereqs: .NET 9 SDK, Docker, Ollama on the host (`qwen3.5:9b`, `qwen3-embedding:0.6b`; not used yet).
+Prereqs: .NET 9 SDK, Docker, Ollama on the host (`qwen3.5:9b` for chat, `qwen3-embedding:0.6b` for embeddings).
 
 ```bash
 docker compose up -d                          # Postgres+pgvector :5432, RabbitMQ :5672 (UI :15672, guest/guest)
-./scripts/download-sources.sh                 # treaty PDFs -> sources/
+./scripts/download-sources.sh                 # 4 annual reports -> sources/
 dotnet run --project src/FinDoc.Api           # http://localhost:5080 (terminal 1)
 dotnet run --project src/FinDoc.Ingestion     # worker (terminal 2)
 
-curl -F "file=@sources/us-uk-2001.pdf" http://localhost:5080/documents
-# worker log: "Extracted 96574 characters from 39 pages of us-uk-2001.pdf (...)"
-curl http://localhost:5080/documents/<id>     # status: Extracted, pageCount, textLength
+for f in sources/*.pdf; do curl -s -F "file=@$f" http://localhost:5080/documents; echo; done
+# worker log: "Embedded 164 chunks of apple-fy2026 in 25.9 s"
+curl http://localhost:5080/documents/<id>     # status: Ingested, pageCount, textLength
 ```
+Expected after ingestion: 610 chunks (Apple 164, Alphabet 133, Amazon 130, Tesla 183), every one embedded, all 23 items found in each report.
 
-Tests: `dotnet build && dotnet test`.
+Tests: `dotnet build && dotnet test --filter "Category!=Integration"` (unit), `dotnet test --filter Category=Integration` (needs the stack, Ollama and the 4 reports ingested).
 
 Uploaded files are stored in `storage/uploads/` (gitignored).
 

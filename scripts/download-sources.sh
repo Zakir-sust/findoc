@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Downloads the public treaty PDFs FinDoc ingests into ./sources/ (gitignored — never commit the PDFs).
-# All URLs are official sources: U.S. Treasury, IRS, United Nations.
+# Downloads the public annual reports (Form 10-K) FinDoc ingests into ./sources/ (gitignored: never commit the PDFs).
+# Every URL is the company's own investor-relations copy of its latest 10-K (checked 13 Nov 2026: each downloads a PDF
+# whose cover says "FORM 10-K" for the fiscal year in the file name). Fiscal years differ: Apple's ends in September.
 # Usage (from the repo root):  ./scripts/download-sources.sh
 # Re-running is safe: files already downloaded are skipped.
 set -euo pipefail
@@ -9,22 +10,16 @@ cd "$(dirname "$0")/.."
 DEST="sources"
 mkdir -p "$DEST"
 
-TREASURY="https://home.treasury.gov/system/files/131"
-IRS="https://www.irs.gov/pub/irs-trty"
-
-# local-file-name|url
+# local-file-name|url   (the file name without .pdf is the report name used in filters and citations)
 SOURCES=(
-  # Model conventions (the templates bilateral treaties follow)
-  "us-model-2016.pdf|$TREASURY/Treaty-US-Model-2016_1.pdf"
-  "un-model-2017.pdf|https://www.un.org/esa/ffd/wp-content/uploads/2018/05/MDT_2017.pdf"
-  # Bilateral treaties (the 5 in data/rates.draft.json). Protocols change some rates, so they're included.
-  "us-uk-2001.pdf|$TREASURY/Treaty-UK-7-24-2001.pdf"
-  "us-germany-1989.pdf|$IRS/germany.pdf"
-  "us-germany-protocol-2006.pdf|$TREASURY/Treaty-Germany-Protocol-6-1-2006.pdf"
-  "us-india-1989.pdf|$IRS/india.pdf"
-  "us-japan-2003.pdf|$TREASURY/Treaty-Japan-11-6-2003.pdf"
-  "us-japan-protocol-2013.pdf|$TREASURY/Treaty-Japan-Pr2-1-24-2013.pdf"
-  "us-bangladesh-2004.pdf|$TREASURY/Treaty-Bangladesh-1-27-2004.pdf"
+  # Apple, fiscal year ended 26 Sep 2026 (123 pages)
+  "apple-fy2026.pdf|https://s2.q4cdn.com/470004039/files/doc_earnings/2026/q4/filing/10K-Q4-2026-as-filed.pdf"
+  # Alphabet (Google), fiscal year ended 31 Dec 2025 (99 pages)
+  "alphabet-fy2025.pdf|https://s206.q4cdn.com/479360582/files/doc_financials/2025/q4/GOOG-10-K-2025.pdf"
+  # Amazon, fiscal year ended 31 Dec 2025 (92 pages: the 12-page shareholder letter, then the 10-K)
+  "amazon-fy2025.pdf|https://s2.q4cdn.com/299287126/files/doc_financials/2026/ar/Amazon-2025-Annual-Report.pdf"
+  # Tesla, fiscal year ended 31 Dec 2025 (139 pages)
+  "tesla-fy2025.pdf|https://ir.tesla.com/_flysystem/s3/sec/000162828026003952/tsla-20251231-gen.pdf"
 )
 
 failed=0

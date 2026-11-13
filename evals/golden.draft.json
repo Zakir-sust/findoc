@@ -1,216 +1,490 @@
 {
-  "_status": "UNVERIFIED DRAFT. 30 questions written by the agent from memory. Article numbers and facts are NOT checked against the treaty texts. Verify every item (block C20) before using it for hit-rate@5 or quality evals.",
-  "_howToVerify": "For each item open expected.sourceFile in sources/, confirm the article and every keyFact, fix or replace the item, set verified=true. Remove items you can't verify. Then rename this file to golden.json.",
-  "_shape": "expected.treaty matches a file name in scripts/download-sources.sh (without .pdf). expected.article is what a correct citation should point to. keyFacts are what a good answer must contain.",
+  "_status": "DRAFT. 30 questions written by Claude on 13 Nov 2026 from the reports' extracted text (not from memory), each with the PDF page the answer is on. Not yet checked by you: C20 (g01-g15) and C21 (g16-g30) open each page and confirm. Then rename this file to golden.json.",
+  "_howToVerify": "For each item open sources/<expected.report>.pdf at expected.page, confirm every keyFact and that the answer sits in one of expected.items, fix or replace the item, set verified=true.",
+  "_shape": "expected.report = a file name in scripts/download-sources.sh without .pdf. expected.items = the items a correct citation may point to (headline numbers appear in both Item 7, the discussion, and Item 8, the statements). keyFacts = what a good answer must contain. g29-g30 have no source: the right answer is a refusal.",
   "items": [
     {
       "id": "g01",
-      "question": "What is the maximum withholding tax rate on dividends paid by a US company to a UK resident individual?",
-      "expected": { "treaty": "us-uk-2001", "article": "Article 10" },
-      "keyFacts": ["15% general rate on dividends", "lower rates apply only to company shareholders meeting ownership thresholds"],
+      "question": "What were Apple's total net sales in fiscal 2026?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 35
+      },
+      "keyFacts": [
+        "$478,834 million (about $478.8 billion)",
+        "up 15% from $416,161 million in fiscal 2025"
+      ],
       "verified": false
     },
     {
       "id": "g02",
-      "question": "Under the US-UK treaty, when can dividends paid to a parent company be exempt from source-country tax?",
-      "expected": { "treaty": "us-uk-2001", "article": "Article 10" },
-      "keyFacts": ["0% rate", "parent owns at least 80% of the voting power", "12-month holding period", "must satisfy the limitation-on-benefits article"],
+      "question": "How much did Apple spend on research and development in fiscal 2026, and how did that change?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 30
+      },
+      "keyFacts": [
+        "$45,765 million",
+        "up 32% from $34,550 million",
+        "10% of total net sales"
+      ],
       "verified": false
     },
     {
       "id": "g03",
-      "question": "How is interest paid from the US to a UK resident taxed under the US-UK treaty?",
-      "expected": { "treaty": "us-uk-2001", "article": "Article 11" },
-      "keyFacts": ["taxable only in the state of residence (0% at source)", "exceptions for contingent interest"],
+      "question": "What was Apple's net income in fiscal 2026?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 8"
+        ],
+        "page": 35
+      },
+      "keyFacts": [
+        "$132,175 million",
+        "fiscal 2025: $112,010 million"
+      ],
       "verified": false
     },
     {
       "id": "g04",
-      "question": "What rate applies to royalties paid by a UK company to a US resident beneficial owner?",
-      "expected": { "treaty": "us-uk-2001", "article": "Article 12" },
-      "keyFacts": ["0%: royalties taxable only in the residence state", "applies to the beneficial owner"],
+      "question": "How many employees did Apple have at the end of fiscal 2026?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 1"
+        ],
+        "page": 8
+      },
+      "keyFacts": [
+        "approximately 167,000 full-time equivalent employees",
+        "as of September 26, 2026"
+      ],
       "verified": false
     },
     {
       "id": "g05",
-      "question": "How long must a building site last to create a permanent establishment under the US-UK treaty?",
-      "expected": { "treaty": "us-uk-2001", "article": "Article 5" },
-      "keyFacts": ["more than twelve months"],
+      "question": "How much did the iPhone sell for Apple in fiscal 2026?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 7"
+        ],
+        "page": 29
+      },
+      "keyFacts": [
+        "iPhone net sales $254,098 million",
+        "up 21%"
+      ],
       "verified": false
     },
     {
       "id": "g06",
-      "question": "How does the US-UK treaty decide residence for an individual who is resident in both countries?",
-      "expected": { "treaty": "us-uk-2001", "article": "Article 4" },
-      "keyFacts": ["tie-breaker tests in order: permanent home, centre of vital interests, habitual abode, nationality", "then mutual agreement of the competent authorities"],
+      "question": "How did Apple's Greater China net sales change in fiscal 2026, and why?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 7"
+        ],
+        "page": 28
+      },
+      "keyFacts": [
+        "$82,378 million, up 28%",
+        "higher net sales of iPhone and Mac"
+      ],
       "verified": false
     },
     {
       "id": "g07",
-      "question": "What withholding rate applies to dividends paid by a German company to a US company that owns 10% of its voting stock?",
-      "expected": { "treaty": "us-germany-1989", "article": "Article 10" },
-      "keyFacts": ["5% for companies owning at least 10% of the voting stock", "15% otherwise"],
+      "question": "Where is Apple headquartered?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 2"
+        ],
+        "page": 23
+      },
+      "keyFacts": [
+        "Cupertino, California"
+      ],
       "verified": false
     },
     {
       "id": "g08",
-      "question": "What did the 2006 protocol to the US-Germany treaty change for intercompany dividends?",
-      "expected": { "treaty": "us-germany-protocol-2006", "article": "Article 10" },
-      "keyFacts": ["introduced a 0% rate on dividends", "for companies owning at least 80% of the voting stock for 12 months", "subject to limitation on benefits"],
+      "question": "How did Apple's fiscal 2026 net sales split between products and services?",
+      "expected": {
+        "report": "apple-fy2026",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 35
+      },
+      "keyFacts": [
+        "Products $355,533 million",
+        "Services $123,301 million"
+      ],
       "verified": false
     },
     {
       "id": "g09",
-      "question": "Is interest paid from Germany to a US resident subject to German withholding tax under the treaty?",
-      "expected": { "treaty": "us-germany-1989", "article": "Article 11" },
-      "keyFacts": ["interest taxable only in the residence state (0% at source)", "exceptions such as contingent or profit-participating interest"],
+      "question": "What were Alphabet's total revenues in 2025?",
+      "expected": {
+        "report": "alphabet-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 34
+      },
+      "keyFacts": [
+        "$402,836 million",
+        "2024: $350,018 million"
+      ],
       "verified": false
     },
     {
       "id": "g10",
-      "question": "What rate does the US-Germany treaty set for royalties?",
-      "expected": { "treaty": "us-germany-1989", "article": "Article 12" },
-      "keyFacts": ["0%: royalties taxable only in the residence state of the beneficial owner"],
+      "question": "What was Alphabet's net income in 2025, and how much did it grow?",
+      "expected": {
+        "report": "alphabet-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 33
+      },
+      "keyFacts": [
+        "$132,170 million",
+        "up $32,052 million (32%) from $100,118 million"
+      ],
       "verified": false
     },
     {
       "id": "g11",
-      "question": "Which article of the US-Germany treaty limits treaty benefits to qualified residents?",
-      "expected": { "treaty": "us-germany-1989", "article": "Article 28" },
-      "keyFacts": ["Limitation on Benefits article", "tests such as publicly traded company, ownership/base erosion, active trade or business"],
+      "question": "How much did Alphabet spend on research and development in 2025?",
+      "expected": {
+        "report": "alphabet-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 36
+      },
+      "keyFacts": [
+        "$61,087 million",
+        "15% of revenues",
+        "up $11.8 billion, mainly employee compensation and depreciation"
+      ],
       "verified": false
     },
     {
       "id": "g12",
-      "question": "What are the dividend withholding rates under the US-India treaty?",
-      "expected": { "treaty": "us-india-1989", "article": "Article 10" },
-      "keyFacts": ["15% if the beneficial owner is a company owning at least 10% of the voting stock", "25% in other cases"],
+      "question": "How many employees did Alphabet have at the end of 2025?",
+      "expected": {
+        "report": "alphabet-fy2025",
+        "items": [
+          "Item 1"
+        ],
+        "page": 8
+      },
+      "keyFacts": [
+        "190,820 employees",
+        "as of December 31, 2025"
+      ],
       "verified": false
     },
     {
       "id": "g13",
-      "question": "What rate applies to interest paid from India to a US bank under the treaty?",
-      "expected": { "treaty": "us-india-1989", "article": "Article 11" },
-      "keyFacts": ["10% when beneficially owned by a bank or similar financial institution", "15% in other cases"],
+      "question": "How much revenue did Google Cloud make in 2025?",
+      "expected": {
+        "report": "alphabet-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 34
+      },
+      "keyFacts": [
+        "$58,705 million",
+        "2024: $43,229 million"
+      ],
       "verified": false
     },
     {
       "id": "g14",
-      "question": "How are fees for included services taxed under the US-India treaty?",
-      "expected": { "treaty": "us-india-1989", "article": "Article 12" },
-      "keyFacts": ["covered by Article 12 together with royalties", "taxed at source at up to 15% (10% for services ancillary to equipment rental)", "'make available' requirement for technical knowledge"],
+      "question": "Where are Alphabet's headquarters?",
+      "expected": {
+        "report": "alphabet-fy2025",
+        "items": [
+          "Item 2"
+        ],
+        "page": 25
+      },
+      "keyFacts": [
+        "Mountain View, California"
+      ],
       "verified": false
     },
     {
       "id": "g15",
-      "question": "When does furnishing services create a permanent establishment under the US-India treaty?",
-      "expected": { "treaty": "us-india-1989", "article": "Article 5" },
-      "keyFacts": ["services through employees for more than 90 days in a 12-month period", "or services to a related enterprise (check exact wording)"],
+      "question": "What was Alphabet's operating margin in 2025?",
+      "expected": {
+        "report": "alphabet-fy2025",
+        "items": [
+          "Item 7"
+        ],
+        "page": 33
+      },
+      "keyFacts": [
+        "32%",
+        "operating income $129,039 million"
+      ],
       "verified": false
     },
     {
       "id": "g16",
-      "question": "How long must a construction project last to create a permanent establishment under the US-India treaty?",
-      "expected": { "treaty": "us-india-1989", "article": "Article 5" },
-      "keyFacts": ["more than 120 days in a twelve-month period"],
+      "question": "What were Amazon's total net sales in 2025?",
+      "expected": {
+        "report": "amazon-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 48
+      },
+      "keyFacts": [
+        "$716,924 million",
+        "2024: $637,959 million"
+      ],
       "verified": false
     },
     {
       "id": "g17",
-      "question": "What withholding rate applies to dividends paid by a Japanese company to a US company owning 10% of its voting stock?",
-      "expected": { "treaty": "us-japan-2003", "article": "Article 10" },
-      "keyFacts": ["5% for at least 10% voting stock", "10% general rate"],
+      "question": "What was Amazon's net income in 2025?",
+      "expected": {
+        "report": "amazon-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 48
+      },
+      "keyFacts": [
+        "$77,670 million",
+        "2024: $59,248 million"
+      ],
       "verified": false
     },
     {
       "id": "g18",
-      "question": "How did the 2013 protocol to the US-Japan treaty change the taxation of interest?",
-      "expected": { "treaty": "us-japan-protocol-2013", "article": "Article 11" },
-      "keyFacts": ["interest generally exempt from source-country tax", "replaces the 10% rate in the 2003 treaty", "exceptions such as contingent interest"],
+      "question": "How many people did Amazon employ at the end of 2025?",
+      "expected": {
+        "report": "amazon-fy2025",
+        "items": [
+          "Item 1"
+        ],
+        "page": 15
+      },
+      "keyFacts": [
+        "approximately 1,576,000 full-time and part-time employees"
+      ],
       "verified": false
     },
     {
       "id": "g19",
-      "question": "What rate does the US-Japan treaty set for royalties?",
-      "expected": { "treaty": "us-japan-2003", "article": "Article 12" },
-      "keyFacts": ["0%: royalties taxable only in the residence state of the beneficial owner"],
+      "question": "How much did AWS sell in 2025?",
+      "expected": {
+        "report": "amazon-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 35
+      },
+      "keyFacts": [
+        "AWS net sales $128,725 million",
+        "2024: $107,556 million"
+      ],
       "verified": false
     },
     {
       "id": "g20",
-      "question": "Under the 2013 protocol, what holding conditions give a 0% rate on US-Japan parent-subsidiary dividends?",
-      "expected": { "treaty": "us-japan-protocol-2013", "article": "Article 10" },
-      "keyFacts": ["company owning at least 50% of the voting stock", "holding period shortened to 6 months", "limitation-on-benefits conditions"],
+      "question": "How much did Amazon spend on research and development in 2025?",
+      "expected": {
+        "report": "amazon-fy2025",
+        "items": [
+          "Item 8"
+        ],
+        "page": 48
+      },
+      "keyFacts": [
+        "Amazon reports no separate R&D line",
+        "the nearest line is Technology and infrastructure: $108,521 million"
+      ],
       "verified": false
     },
     {
       "id": "g21",
-      "question": "What withholding rate applies to dividends paid by a Bangladeshi company to a US company owning 10% of its voting stock?",
-      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 10" },
-      "keyFacts": ["10% for companies owning at least 10% of the voting stock", "15% in other cases"],
+      "question": "Where is Amazon's corporate headquarters?",
+      "expected": {
+        "report": "amazon-fy2025",
+        "items": [
+          "Item 2"
+        ],
+        "page": 29
+      },
+      "keyFacts": [
+        "Washington's Puget Sound region and Arlington, Virginia"
+      ],
       "verified": false
     },
     {
       "id": "g22",
-      "question": "What is the treaty rate on interest paid from Bangladesh to a US resident?",
-      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 11" },
-      "keyFacts": ["10% of the gross amount", "exemption for interest paid to governments / central banks"],
+      "question": "What was Amazon's operating income in 2025?",
+      "expected": {
+        "report": "amazon-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 48
+      },
+      "keyFacts": [
+        "$79,975 million",
+        "2024: $68,593 million"
+      ],
       "verified": false
     },
     {
       "id": "g23",
-      "question": "What is the maximum rate on royalties under the US-Bangladesh treaty?",
-      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 12" },
-      "keyFacts": ["10% of the gross amount of the royalties"],
+      "question": "What were Tesla's total revenues in 2025?",
+      "expected": {
+        "report": "tesla-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 53
+      },
+      "keyFacts": [
+        "$94,827 million",
+        "down from $97,690 million in 2024"
+      ],
       "verified": false
     },
     {
       "id": "g24",
-      "question": "How does the US-Bangladesh treaty define a permanent establishment?",
-      "expected": { "treaty": "us-bangladesh-2004", "article": "Article 5" },
-      "keyFacts": ["fixed place of business through which the business is carried on", "includes a place of management, branch, office, factory, mine", "building site threshold (check the number of days/months)"],
+      "question": "What was Tesla's net income in 2025?",
+      "expected": {
+        "report": "tesla-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 53
+      },
+      "keyFacts": [
+        "$3,855 million (attributable to common stockholders: $3,794 million)",
+        "2024: $7,153 million"
+      ],
       "verified": false
     },
     {
       "id": "g25",
-      "question": "In the 2016 US Model treaty, how long must a building site or construction project last to be a permanent establishment?",
-      "expected": { "treaty": "us-model-2016", "article": "Article 5" },
-      "keyFacts": ["more than twelve months"],
+      "question": "How many vehicles did Tesla deliver in 2025?",
+      "expected": {
+        "report": "tesla-fy2025",
+        "items": [
+          "Item 7"
+        ],
+        "page": 34
+      },
+      "keyFacts": [
+        "approximately 1.64 million consumer vehicles delivered",
+        "approximately 1.66 million produced"
+      ],
       "verified": false
     },
     {
       "id": "g26",
-      "question": "What does the 2016 US Model treaty provide for interest paid to a resident of the other state?",
-      "expected": { "treaty": "us-model-2016", "article": "Article 11" },
-      "keyFacts": ["taxable only in the residence state", "special rules that deny benefits for interest benefiting from a special tax regime (check wording)"],
+      "question": "How much energy storage did Tesla deploy in 2025?",
+      "expected": {
+        "report": "tesla-fy2025",
+        "items": [
+          "Item 7"
+        ],
+        "page": 34
+      },
+      "keyFacts": [
+        "46.7 GWh"
+      ],
       "verified": false
     },
     {
       "id": "g27",
-      "question": "Which article of the 2016 US Model covers limitation on benefits, and what is its purpose?",
-      "expected": { "treaty": "us-model-2016", "article": "Article 22" },
-      "keyFacts": ["Limitation on Benefits", "prevents treaty shopping by residents of third states", "qualified person tests, active trade or business test, derivative benefits"],
+      "question": "How much did Tesla spend on research and development in 2025?",
+      "expected": {
+        "report": "tesla-fy2025",
+        "items": [
+          "Item 7",
+          "Item 8"
+        ],
+        "page": 53
+      },
+      "keyFacts": [
+        "$6,411 million",
+        "2024: $4,540 million"
+      ],
       "verified": false
     },
     {
       "id": "g28",
-      "question": "Under the UN Model Convention 2017, when does furnishing services create a permanent establishment?",
-      "expected": { "treaty": "un-model-2017", "article": "Article 5" },
-      "keyFacts": ["services through employees for more than 183 days in any 12-month period", "paragraph 3(b)"],
+      "question": "Where is Tesla headquartered?",
+      "expected": {
+        "report": "tesla-fy2025",
+        "items": [
+          "Item 2"
+        ],
+        "page": 31
+      },
+      "keyFacts": [
+        "Austin, Texas"
+      ],
       "verified": false
     },
     {
       "id": "g29",
-      "question": "What new article on fees for technical services was added to the UN Model in 2017?",
-      "expected": { "treaty": "un-model-2017", "article": "Article 12A" },
-      "keyFacts": ["Article 12A", "allows source taxation of fees for technical services", "rate left to bilateral negotiation"],
+      "question": "What was Microsoft's revenue in fiscal 2026?",
+      "expected": {
+        "report": null,
+        "items": [],
+        "page": null
+      },
+      "keyFacts": [
+        "refusal: Microsoft's report is not in the sources"
+      ],
       "verified": false
     },
     {
       "id": "g30",
-      "question": "Does the UN Model 2017 fix a withholding rate for royalties?",
-      "expected": { "treaty": "un-model-2017", "article": "Article 12" },
-      "keyFacts": ["no fixed rate: the percentage is left to bilateral negotiation", "allows source-state taxation of royalties (unlike the OECD Model)"],
+      "question": "What will Apple's share price be at the end of 2027?",
+      "expected": {
+        "report": null,
+        "items": [],
+        "page": null
+      },
+      "keyFacts": [
+        "refusal: a forecast is not in the sources"
+      ],
       "verified": false
     }
   ]

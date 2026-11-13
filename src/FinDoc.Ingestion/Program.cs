@@ -13,7 +13,7 @@ builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(Rab
 
 builder.Services.AddSingleton<PdfTextExtractor>();
 builder.Services.AddScoped<DocumentIngestor>();
-builder.Services.AddSingleton<IChunker, ArticleChunker>();
+builder.Services.AddSingleton<IChunker, ItemChunker>();
 builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(new OllamaApiClient(new Uri("http://localhost:11434"), "qwen3-embedding:0.6b"));
 builder.Services.AddHostedService<IngestWorker>();
 

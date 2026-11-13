@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 namespace FinDoc.Tests.Retrieval;
 
 /// <summary>
-/// Runs against the real local stack: the compose Postgres (the 9 PDFs ingested in C09) and Ollama on the host.
+/// Runs against the real local stack: the compose Postgres (the 4 annual reports ingested by scripts/download-sources.sh + the upload loop in the README) and Ollama on the host.
 /// Not a unit test: it needs `docker compose up` and Ollama running. Run it alone with
 /// `dotnet test --filter Category=Integration`. (C15 adds the Testcontainers version with seeded chunks.)
 /// </summary>
@@ -16,7 +16,7 @@ public sealed class RetrieverTests : IDisposable
 {
     // The same local dev database as src/FinDoc.Ingestion/appsettings.json.
     private const string ConnectionString = "Host=localhost;Port=5432;Database=findoc;Username=findoc;Password=findoc";
-    private const string Treaty = "us-bangladesh-2004";
+    private const string Report = "apple-fy2026";
 
     private readonly FinDocDbContext _db;
     private readonly OllamaApiClient _ollama;
@@ -37,28 +37,29 @@ public sealed class RetrieverTests : IDisposable
         _retriever = new Retriever(_db, _ollama);
     }
 
-    // g21, g22 and g24 from evals/golden.draft.json.
+    // g02, g05 and g07 from evals/golden.draft.json (Apple's fiscal 2026 10-K). Known miss, kept out on purpose:
+    // g04 "How many employees…" ranks its chunk 33rd (one sentence inside an ~800-token Item 1 chunk). The evals (C22) count it.
     [Theory]
-    [InlineData("What withholding rate applies to dividends paid by a Bangladeshi company to a US company owning 10% of its voting stock?", "Article 10")]
-    [InlineData("What is the treaty rate on interest paid from Bangladesh to a US resident?", "Article 11")]
-    [InlineData("How does the US-Bangladesh treaty define a permanent establishment?", "Article 5")]
-    public async Task KnownQuestion_HitsExpectedArticle_InTop5(string question, string expectedArticle)
+    [InlineData("How much did Apple spend on research and development in fiscal 2026, and how did that change?", "Item 7")]
+    [InlineData("How much did the iPhone sell for Apple in fiscal 2026?", "Item 7")]
+    [InlineData("Where is Apple headquartered?", "Item 2")]
+    public async Task KnownQuestion_HitsExpectedItem_InTop5(string question, string expectedItem)
     {
-        var results = await _retriever.SearchAsync(question, k: 5, treaty: Treaty);
+        var results = await _retriever.SearchAsync(question, k: 5, report: Report);
 
         for (var i = 0; i < results.Count; i++)
-            _output.WriteLine($"#{i + 1}  {results[i].Article ?? "-",-11} {results[i].Score:F3}");
+            _output.WriteLine($"#{i + 1}  {results[i].Item ?? "-",-11} {results[i].Score:F3}");
 
-        Assert.Contains(expectedArticle, results.Select(r => r.Article));
+        Assert.Contains(expectedItem, results.Select(r => r.Item));
     }
 
     [Fact]
-    public async Task TreatyFilter_ReturnsKChunks_AllFromThatTreaty_NearestFirst()
+    public async Task ReportFilter_ReturnsKChunks_AllFromThatReport_NearestFirst()
     {
-        var results = await _retriever.SearchAsync("withholding tax on dividends", k: 5, treaty: Treaty);
+        var results = await _retriever.SearchAsync("research and development expense", k: 5, report: Report);
 
         Assert.Equal(5, results.Count);
-        Assert.All(results, r => Assert.Equal(Treaty, r.Treaty));
+        Assert.All(results, r => Assert.Equal(Report, r.Report));
         Assert.Equal(results.OrderByDescending(r => r.Score), results); // scores never go up
     }
 

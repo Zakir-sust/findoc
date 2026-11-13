@@ -47,9 +47,9 @@ public sealed class DocumentIngestor(
                 "Extracted {TextLength} characters from {PageCount} pages of {FileName} ({DocumentId})",
                 fullText.Length, text.Pages.Count, document.FileName, documentId);
 
-            // 2. Chunk by article (C08). Treaty = the file name without ".pdf", e.g. "us-bangladesh-2004".
-            var treaty = Path.GetFileNameWithoutExtension(document.FileName);
-            var textChunks = chunker.Chunk(text.Pages, treaty);
+            // 2. Chunk by 10-K item (C08). Report = the file name without ".pdf", e.g. "apple-fy2026".
+            var report = Path.GetFileNameWithoutExtension(document.FileName);
+            var textChunks = chunker.Chunk(text.Pages, report);
 
             // 3. Embed in batches, one Ollama request per batch, and add one Chunk row per TextChunk.
             //    textChunks.Chunk(32) is LINQ's Enumerable.Chunk (not our Chunk entity): it cuts the list, in order,
@@ -71,14 +71,14 @@ public sealed class DocumentIngestor(
                     {
                         Ordinal = textChunk.Ordinal,
                         Content = textChunk.Content,
-                        Article = textChunk.Article is int n ? $"Article {n}" : null, // not .ToString(): a null int? gives ""
+                        Item = textChunk.Item is { } item ? $"Item {item}" : null,
                         TokenCount = textChunk.TokenCount,
                         Embedding = new Vector(embedding.Vector),
                     });
                 }
             }
-            logger.LogInformation("Embedded {ChunkCount} chunks of {Treaty} in {Seconds:F1} s",
-                textChunks.Count, treaty, stopwatch.Elapsed.TotalSeconds);
+            logger.LogInformation("Embedded {ChunkCount} chunks of {Report} in {Seconds:F1} s",
+                textChunks.Count, report, stopwatch.Elapsed.TotalSeconds);
 
             document.PageCount = text.Pages.Count;
             document.TextLength = fullText.Length;
@@ -97,9 +97,9 @@ public sealed class DocumentIngestor(
     }
 
     /// <summary>
-    /// The text that gets embedded: the heading ("Article 10 Dividends") + the chunk, so a question that names the
-    /// article or its topic matches better. Only <see cref="TextChunk.Content"/> is stored and shown as the source.
+    /// The text that gets embedded: the heading ("Item 1A Risk Factors") + the chunk, so a question that names the
+    /// item or its topic matches better (a piece from the middle of a long item doesn't repeat its heading otherwise). Only <see cref="TextChunk.Content"/> is stored and shown as the source.
     /// </summary>
     private static string EmbeddingInput(TextChunk chunk) =>
-        chunk.Article is int n ? $"Article {n} {chunk.Title}\n{chunk.Content}" : chunk.Content;
+        chunk.Item is { } item ? $"Item {item} {chunk.Title}\n{chunk.Content}" : chunk.Content;
 }

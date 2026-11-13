@@ -31,7 +31,7 @@ public class FinDocDbContext(DbContextOptions<FinDocDbContext> options) : DbCont
 
         modelBuilder.Entity<Chunk>(e =>
         {
-            e.Property(c => c.Article).HasMaxLength(100);
+            e.Property(c => c.Item).HasMaxLength(100);
             e.Property(c => c.Embedding).HasColumnType($"vector({EmbeddingDimensions})");
             e.HasIndex(c => new { c.DocumentId, c.Ordinal }).IsUnique();
 

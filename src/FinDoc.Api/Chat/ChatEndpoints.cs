@@ -6,14 +6,14 @@ using Microsoft.Extensions.AI;
 namespace FinDoc.Api.Chat;
 
 /// <param name="Question">Required.</param>
-/// <param name="Treaty">Optional filter, e.g. "us-bangladesh-2004". Not used until retrieval plugs in (C13).</param>
-public sealed record ChatRequest(string? Question, string? Treaty);
+/// <param name="Report">Optional filter, e.g. "apple-fy2026". Not used until retrieval plugs in (C13).</param>
+public sealed record ChatRequest(string? Question, string? Report);
 
 public static class ChatEndpoints
 {
     // Stub prompt for C10: no documents yet, just enough to see tokens stream.
     private const string StubSystemPrompt =
-        "You are FinDoc, an assistant for questions about tax treaties. Answer briefly and plainly.";
+        "You are FinDoc, an assistant for questions about company annual reports (10-K filings). Answer briefly and plainly.";
 
     // Web defaults = camelCase ({"text":...}). The relaxed encoder keeps ' < & and non-ASCII readable in curl
     // instead of ' etc.; that's safe here because this JSON goes into an event stream, never into HTML.

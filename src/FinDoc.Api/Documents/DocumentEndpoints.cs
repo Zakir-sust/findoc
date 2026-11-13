@@ -12,7 +12,7 @@ public static class DocumentEndpoints
     {
         var group = app.MapGroup("/documents");
 
-        // curl -F "file=@sources/Treaty-UK-7-24-2001.pdf" http://localhost:5080/documents
+        // curl -F "file=@sources/apple-fy2026.pdf" http://localhost:5080/documents
         group.MapPost("/", UploadAsync)
             .DisableAntiforgery(); // plain multipart upload from curl/Angular, no cookies involved
 
