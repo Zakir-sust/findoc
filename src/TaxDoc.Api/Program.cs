@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TaxDoc.Api.Chat;
 using TaxDoc.Api.Documents;
 using TaxDoc.Api.Messaging;
 using TaxDoc.Core.Data;
@@ -14,6 +15,9 @@ builder.Services.AddSingleton<IIngestPublisher, RabbitMqIngestPublisher>();
 
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(StorageOptions.SectionName));
 builder.Services.AddSingleton<FileStore>();
+
+// IChatClient for POST /chat: Ollama or Azure OpenAI, picked by Chat:Provider. Stops start-up if its settings are missing.
+builder.Services.AddTaxDocChatClient(builder.Configuration);
 
 var app = builder.Build();
 
