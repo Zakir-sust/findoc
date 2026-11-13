@@ -30,5 +30,6 @@ using (var scope = app.Services.CreateScope())
 
 app.MapGet("/", () => "TaxDoc API");
 app.MapDocumentEndpoints();
+app.MapChatEndpoints();
 
 app.Run();
