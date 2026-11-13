@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TaxDoc.Core\TaxDoc.Core.csproj" />
+    <InternalsVisibleTo Include="TaxDoc.Tests" /> <!-- the tests call ChatEndpoints.StreamAnswerAsync directly -->
   </ItemGroup>
 
   <ItemGroup>
