@@ -1,3 +1,7 @@
+using System.Diagnostics;
+using Microsoft.Extensions.AI;
+using Pgvector;
+using TaxDoc.Core.Chunking;
 using TaxDoc.Core.Data;
 using TaxDoc.Core.Documents;
 
@@ -10,8 +14,13 @@ namespace TaxDoc.Ingestion;
 public sealed class DocumentIngestor(
     TaxDocDbContext db,
     PdfTextExtractor extractor,
+    IChunker chunker,
+    IEmbeddingGenerator<string, Embedding<float>> generator,
     ILogger<DocumentIngestor> logger)
 {
+    /// <summary>Chunks per Ollama request: big enough to be fast, small enough to stay far below the 100 s HttpClient timeout.</summary>
+    private const int BatchSize = 32;
+
     public async Task IngestAsync(Guid documentId, CancellationToken ct)
     {
         var document = await db.Documents.FindAsync([documentId], ct);
@@ -38,19 +47,42 @@ public sealed class DocumentIngestor(
                 "Extracted {TextLength} characters from {PageCount} pages of {FileName} ({DocumentId})",
                 fullText.Length, text.Pages.Count, document.FileName, documentId);
 
-            // ---------------------------------------------------------------------------------
-            // 2. TODO(C09 — Jakir): chunk the pages with the IChunker (ArticleChunker, built in C08).
-            //      var textChunks = chunker.Chunk(text.Pages, treaty);   // treaty: e.g. the file name without ".pdf"
-            //
-            // 3. TODO(C09 — Jakir, by hand): embed each chunk (IEmbeddingGenerator, Ollama
-            //    qwen3-embedding:0.6b → 1024 dims) and add Chunk rows with Embedding set:
-            //      document.Chunks.Add(new Chunk { Ordinal = ..., Content = ..., Article = ..., Embedding = new Vector(...) });
-            //    Then set Status = Ingested instead of Extracted below.
-            // ---------------------------------------------------------------------------------
+            // 2. Chunk by article (C08). Treaty = the file name without ".pdf", e.g. "us-bangladesh-2004".
+            var treaty = Path.GetFileNameWithoutExtension(document.FileName);
+            var textChunks = chunker.Chunk(text.Pages, treaty);
+
+            // 3. Embed in batches, one Ollama request per batch, and add one Chunk row per TextChunk.
+            //    textChunks.Chunk(32) is LINQ's Enumerable.Chunk (not our Chunk entity): it cuts the list, in order,
+            //    into arrays of up to 32 items: [0..31], [32..63], ..., and the last array is shorter.
+            var stopwatch = Stopwatch.StartNew();
+            foreach (var batch in textChunks.Chunk(BatchSize))
+            {
+                var inputs = batch.Select(EmbeddingInput).ToList();
+                var embeddings = await generator.GenerateAsync(inputs, cancellationToken: ct);
+
+                // The generator returns one embedding per input, in input order: embeddings[i] is batch[i]'s vector.
+                // Zip pairs them up, but silently stops at the shorter list, so check the counts first.
+                if (embeddings.Count != batch.Length)
+                    throw new InvalidOperationException($"Asked for {batch.Length} embeddings, got {embeddings.Count}.");
+
+                foreach (var (textChunk, embedding) in batch.Zip(embeddings))
+                {
+                    document.Chunks.Add(new Chunk
+                    {
+                        Ordinal = textChunk.Ordinal,
+                        Content = textChunk.Content,
+                        Article = textChunk.Article is int n ? $"Article {n}" : null, // not .ToString(): a null int? gives ""
+                        TokenCount = textChunk.TokenCount,
+                        Embedding = new Vector(embedding.Vector),
+                    });
+                }
+            }
+            logger.LogInformation("Embedded {ChunkCount} chunks of {Treaty} in {Seconds:F1} s",
+                textChunks.Count, treaty, stopwatch.Elapsed.TotalSeconds);
 
             document.PageCount = text.Pages.Count;
             document.TextLength = fullText.Length;
-            document.Status = DocumentStatus.Extracted;
+            document.Status = DocumentStatus.Ingested;
             document.Error = null;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -63,4 +95,11 @@ public sealed class DocumentIngestor(
         document.ProcessedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct); // the commit; the consumer acks only after this returns
     }
+
+    /// <summary>
+    /// The text that gets embedded: the heading ("Article 10 Dividends") + the chunk, so a question that names the
+    /// article or its topic matches better. Only <see cref="TextChunk.Content"/> is stored and shown as the source.
+    /// </summary>
+    private static string EmbeddingInput(TextChunk chunk) =>
+        chunk.Article is int n ? $"Article {n} {chunk.Title}\n{chunk.Content}" : chunk.Content;
 }

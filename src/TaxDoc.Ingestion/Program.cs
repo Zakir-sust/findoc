@@ -1,3 +1,6 @@
+using Microsoft.Extensions.AI;
+using OllamaSharp;
+using TaxDoc.Core.Chunking;
 using TaxDoc.Core.Data;
 using TaxDoc.Core.Messaging;
 using TaxDoc.Ingestion;
@@ -10,8 +13,8 @@ builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection(Rab
 
 builder.Services.AddSingleton<PdfTextExtractor>();
 builder.Services.AddScoped<DocumentIngestor>();
-// TODO(C09 — Jakir): register the IChunker (ArticleChunker, from C08) and the embedding generator here.
-
+builder.Services.AddSingleton<IChunker, ArticleChunker>();
+builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(new OllamaApiClient(new Uri("http://localhost:11434"), "qwen3-embedding:0.6b"));
 builder.Services.AddHostedService<IngestWorker>();
 
 var host = builder.Build();
