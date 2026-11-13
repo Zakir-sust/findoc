@@ -1,20 +1,20 @@
-# Local infrastructure for TaxDoc. The API and the worker run on the host (dotnet run),
+# Local infrastructure for FinDoc. The API and the worker run on the host (dotnet run),
 # and so does Ollama (http://localhost:11434), so only Postgres and RabbitMQ live here.
-name: taxdoc
+name: findoc
 
 services:
   postgres:
     image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_USER: taxdoc
-      POSTGRES_PASSWORD: taxdoc
-      POSTGRES_DB: taxdoc
+      POSTGRES_USER: findoc
+      POSTGRES_PASSWORD: findoc
+      POSTGRES_DB: findoc
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U taxdoc -d taxdoc"]
+      test: ["CMD-SHELL", "pg_isready -U findoc -d findoc"]
       interval: 5s
       timeout: 3s
       retries: 10

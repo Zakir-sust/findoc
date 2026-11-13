@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Downloads the public treaty PDFs TaxDoc ingests into ./sources/ (gitignored — never commit the PDFs).
+# Downloads the public treaty PDFs FinDoc ingests into ./sources/ (gitignored — never commit the PDFs).
 # All URLs are official sources: U.S. Treasury, IRS, United Nations.
 # Usage (from the repo root):  ./scripts/download-sources.sh
 # Re-running is safe: files already downloaded are skipped.
@@ -39,7 +39,7 @@ for entry in "${SOURCES[@]}"; do
   fi
 
   echo "get   $name  <-  $url"
-  if curl -fsSL --retry 3 --max-time 180 -A "Mozilla/5.0 (TaxDoc downloader)" -o "$out.part" "$url" \
+  if curl -fsSL --retry 3 --max-time 180 -A "Mozilla/5.0 (FinDoc downloader)" -o "$out.part" "$url" \
      && [[ "$(head -c 4 "$out.part")" == "%PDF" ]]; then
     mv "$out.part" "$out"
   else
