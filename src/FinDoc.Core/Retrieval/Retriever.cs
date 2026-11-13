@@ -1,0 +1,69 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
+using Pgvector;
+using Pgvector.EntityFrameworkCore;
+using FinDoc.Core.Data;
+
+namespace FinDoc.Core.Retrieval;
+
+/// <summary>One search hit: which report and item it comes from, its text, and how close it is to the question.</summary>
+/// <param name="Report">The file name without ".pdf", e.g. "apple-fy2026".</param>
+/// <param name="Score">Cosine similarity = 1 − cosine distance: 1 = same direction, 0 = unrelated.</param>
+public record RetrievedChunk(string Report, string? Item, string Content, double Score);
+
+/// <summary>
+/// Finds the chunks closest to a question: embed the question with the same model as the chunks,
+/// then let pgvector order the chunks by cosine distance (the <c>&lt;=&gt;</c> operator) and take the top k.
+/// </summary>
+public class Retriever
+{
+    private readonly FinDocDbContext _db;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> _generator;
+
+    public Retriever(FinDocDbContext db, IEmbeddingGenerator<string, Embedding<float>> generator)
+    {
+        _db = db;
+        _generator = generator;
+    }
+
+    public async Task<List<RetrievedChunk>> SearchAsync(string question, int k = 5, string? report = null, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(question);
+        ArgumentOutOfRangeException.ThrowIfLessThan(k, 1);
+
+        // 1. The question becomes a vector in the same 1024-dimension space as the stored chunks.
+        //    It must be the same model as at ingestion, or the distances mean nothing.
+        var embedding = await _generator.GenerateAsync(question, cancellationToken: ct);
+        var queryVector = new Vector(embedding.Vector);
+
+        // 2. Only chunks that have an embedding.
+        var chunks = _db.Chunks.Where(x => x.Embedding != null);
+
+        // 3. Optional report filter. The report isn't a column: the worker takes it from the file name.
+        //    Built outside the lambda for readability: EF would turn report + ".pdf" into one SQL parameter either way.
+        if (report is not null)
+        {
+            var fileName = report + ".pdf";
+            chunks = chunks.Where(x => x.Document.FileName == fileName);
+        }
+
+        // 4. Nearest first. CosineDistance becomes "<=>" in SQL: 0 = same direction, up to 2 = opposite.
+        var rows = await chunks
+            .OrderBy(x => x.Embedding!.CosineDistance(queryVector))
+            .Take(k)
+            .Select(x => new
+            {
+                x.Document.FileName,
+                x.Item,
+                x.Content,
+                Distance = x.Embedding!.CosineDistance(queryVector),
+            })
+            .ToListAsync(ct);
+
+        // 5. Shape the result in memory (Path.GetFileNameWithoutExtension has no SQL translation).
+        return rows
+            .Select(r => new RetrievedChunk(
+                Path.GetFileNameWithoutExtension(r.FileName), r.Item, r.Content, 1 - r.Distance))
+            .ToList();
+    }
+}

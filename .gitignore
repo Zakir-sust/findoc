@@ -483,7 +483,7 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# TaxDoc: never commit source PDFs or uploaded files
+# FinDoc: never commit source PDFs or uploaded files
 sources/
 storage/
 *.pdf
