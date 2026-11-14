@@ -15,7 +15,7 @@ public record RetrievedChunk(string Report, string? Item, string Content, double
 /// Finds the chunks closest to a question: embed the question with the same model as the chunks,
 /// then let pgvector order the chunks by cosine distance (the <c>&lt;=&gt;</c> operator) and take the top k.
 /// </summary>
-public class Retriever
+public class Retriever : IRetriever
 {
     private readonly FinDocDbContext _db;
     private readonly IEmbeddingGenerator<string, Embedding<float>> _generator;

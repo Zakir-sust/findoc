@@ -1,9 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
+using OllamaSharp;
 using FinDoc.Api.Chat;
 using FinDoc.Api.Documents;
 using FinDoc.Api.Messaging;
 using FinDoc.Core.Data;
 using FinDoc.Core.Messaging;
+using FinDoc.Core.Retrieval;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +18,14 @@ builder.Services.AddSingleton<IIngestPublisher, RabbitMqIngestPublisher>();
 
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(StorageOptions.SectionName));
 builder.Services.AddSingleton<FileStore>();
+
+// Retrieval for POST /chat. The question must be embedded with the same model the worker used for the chunks
+// (FinDoc.Ingestion/Program.cs): a different model gives vectors in a different space, and the distances mean nothing.
+var embeddings = builder.Configuration.GetSection("Embeddings");
+builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(new OllamaApiClient(
+    new Uri(embeddings["Endpoint"] ?? throw new InvalidOperationException("Missing Embeddings:Endpoint.")),
+    embeddings["Model"] ?? throw new InvalidOperationException("Missing Embeddings:Model.")));
+builder.Services.AddScoped<IRetriever, Retriever>(); // scoped like the DbContext it uses
 
 // IChatClient for POST /chat: Ollama or Azure OpenAI, picked by Chat:Provider. Stops start-up if its settings are missing.
 builder.Services.AddFinDocChatClient(builder.Configuration);

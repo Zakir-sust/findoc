@@ -5,7 +5,7 @@ the report and the 10-K item they came from, e.g. `[apple-fy2026, Item 7]`. Anyo
 the cited page and read the number.
 
 Status: ingestion works end to end (upload → RabbitMQ → worker → PdfPig text → 10-K item chunks → embeddings in
-pgvector), retrieval with a report filter works, `/chat` streams a stub answer. Retrieval + citations go into `/chat` next (C12–C13).
+pgvector), retrieval with a report filter works, and `/chat` streams a cited answer from the top 5 chunks (C13).
 
 ## Layout
 | Path | What |
@@ -40,19 +40,24 @@ Tests: `dotnet build && dotnet test --filter "Category!=Integration"` (unit), `d
 
 Uploaded files are stored in `storage/uploads/` (gitignored).
 
-## Chat (`POST /chat`, block C10)
-Streams the answer as Server-Sent Events. **Stub prompt for now** (fixed system message + your question; retrieval and citations come in C13).
+## Chat (`POST /chat`, blocks C10 + C13)
+Answers from the reports, streamed as Server-Sent Events: the question is embedded (same model as the chunks) → the top 5
+chunks from pgvector, optionally from one report → the C12 citation prompt → the model's tokens.
 
 ```bash
 curl -N -X POST http://localhost:5080/chat -H 'Content-Type: application/json' \
-  -d '{"question":"Say hello in five words."}'
-# data: {"text":"Hello"}
-# data: {"text":","}
+  -d '{"question":"How many shares did Tesla grant in its 2025 CEO Performance Award?","report":"tesla-fy2025"}'
+# data: {"text":"Approximately"}
 # ...
+# event: sources
+# data: [{"label":"sources-[tesla-fy2025]-[Item 8]","item":"Item 8","text":"..."}]
 # event: done
 # data: {}
 ```
-Each token chunk is one `data:` event holding JSON (`{"text":...}`), so a newline inside a token can't break the event. The stream ends with `event: done`, or `event: error` if the model call fails after the stream started. An empty question returns 400.
+- Each token chunk is one `data:` event holding JSON (`{"text":...}`), so a newline inside a token can't break the event.
+- `event: sources` comes after the tokens: every chunk whose label the answer cited (two chunks of one item share a label), with its text. A citation that matches no source sent is dropped and logged as a warning. A refusal (`Not in Source`) cites nothing: `[]`.
+- No matching chunks (e.g. an unknown `report`) still goes to the model, which answers `Not in Source`.
+- The stream ends with `event: done`, or `event: error` if the search or the model call fails after the stream opened. An empty question returns 400.
 
 **Switch provider** with `Chat:Provider` in `src/FinDoc.Api/appsettings.json` (`Ollama` or `AzureOpenAI`), or for one run with an env var: `Chat__Provider=AzureOpenAI dotnet run --project src/FinDoc.Api`. The API refuses to start if the chosen provider's settings are missing.
 
