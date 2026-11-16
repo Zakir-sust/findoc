@@ -32,10 +32,11 @@ public static partial class CitationPrompt
     /// The citation for a chunk: <c>sources-[apple-fy2026]-[Item 8]</c>, or <c>sources-[amazon-fy2025]</c>
     /// for a chunk with no item (cover pages and the like: 27 of the 610 chunks).
     /// </summary>
-    public static string LabelFor(RetrievedChunk chunk) =>
-        chunk.Item is null
-            ? $"sources-[{chunk.Report}]"
-            : $"sources-[{chunk.Report}]-[{chunk.Item}]";
+    public static string LabelFor(RetrievedChunk chunk) => Label(chunk.Report, chunk.Item);
+
+    // The one place the label format lives: the prompt's labels and the citations read back both come from here.
+    private static string Label(string report, string? item) =>
+        item is null ? $"sources-[{report}]" : $"sources-[{report}]-[{item}]";
 
     public static List<ChatMessage> Build(string question, IReadOnlyList<RetrievedChunk> chunks)
     {
@@ -58,14 +59,27 @@ public static partial class CitationPrompt
     }
 
     /// <summary>
-    /// Every citation in an answer, in order, without repeats. Both forms match:
-    /// <c>sources-[report]-[Item N]</c> and <c>sources-[report]</c>. Compare them with the labels sent:
+    /// Every citation in an answer, in order, without repeats, each rewritten as the exact label
+    /// (<c>sources-[report]-[Item N]</c> or <c>sources-[report]</c>). Compare them with the labels sent:
     /// a citation that is not one of them points at no source.
     /// </summary>
+    /// <remarks>
+    /// Two spellings are read as the same label, because models don't all copy it exactly:
+    /// <list type="bullet">
+    /// <item><c>sources-[tesla-fy2025]-[Item 8]</c>: the label as sent (qwen3.5, C13).</item>
+    /// <item><c>[sources-tesla-fy2025]-[Item 8]</c>: the first bracket moved left (gpt-4.1-mini on Azure, C14).
+    /// Before C14 this matched nothing, so the answer came back with no sources and no warning.</item>
+    /// </list>
+    /// </remarks>
     public static IReadOnlyList<string> FindCitations(string answer) =>
-        CitationPattern().Matches(answer).Select(m => m.Value).Distinct().ToList();
+        CitationPattern().Matches(answer)
+            .Select(m => Label(m.Groups["report"].Value, m.Groups["item"].Success ? m.Groups["item"].Value : null))
+            .Distinct()
+            .ToList();
 
-    // "sources-[" + anything up to "]", then optionally "-[" + anything up to "]". No line breaks inside the brackets.
-    [GeneratedRegex(@"sources-\[[^\]\r\n]+\](?:-\[[^\]\r\n]+\])?")]
+    // Either "sources-[report]" or "[sources-report]", then optionally "-[item]". .NET lets both alternatives
+    // fill the same named group. Brackets and line breaks can't appear inside a name, which also keeps a label
+    // wrapped in extra brackets ("[sources-[x]-[Item 8]]") read as the label inside it.
+    [GeneratedRegex(@"(?:sources-\[(?<report>[^\[\]\r\n]+)\]|\[sources-(?<report>[^\[\]\r\n]+)\])(?:-\[(?<item>[^\[\]\r\n]+)\])?")]
     private static partial Regex CitationPattern();
 }

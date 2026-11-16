@@ -55,7 +55,7 @@ curl -N -X POST http://localhost:5080/chat -H 'Content-Type: application/json' \
 # data: {}
 ```
 - Each token chunk is one `data:` event holding JSON (`{"text":...}`), so a newline inside a token can't break the event.
-- `event: sources` comes after the tokens: every chunk whose label the answer cited (two chunks of one item share a label), with its text. A citation that matches no source sent is dropped and logged as a warning. A refusal (`Not in Source`) cites nothing: `[]`.
+- `event: sources` comes after the tokens: every chunk whose label the answer cited (two chunks of one item share a label), with its text. A citation that matches no source sent is dropped and logged as a warning. The label also counts when the model moves the first bracket (`[sources-tesla-fy2025]-[Item 8]`, as gpt-4.1-mini did in C14). A refusal (`Not in Source`) cites nothing: `[]`.
 - No matching chunks (e.g. an unknown `report`) still goes to the model, which answers `Not in Source`.
 - The stream ends with `event: done`, or `event: error` if the search or the model call fails after the stream opened. An empty question returns 400.
 
@@ -64,13 +64,19 @@ curl -N -X POST http://localhost:5080/chat -H 'Content-Type: application/json' \
 | Provider | Settings |
 |---|---|
 | `Ollama` (default) | `Chat:Ollama:Endpoint` (`http://localhost:11434`), `Chat:Ollama:Model` (`qwen3.5:9b`). Sent with `num_ctx` 16384 and thinking off. |
-| `AzureOpenAI` | `Chat:AzureOpenAI:Endpoint` (`https://<resource>.openai.azure.com/`), `Chat:AzureOpenAI:Deployment` (your deployment name), `Chat:AzureOpenAI:ApiKey` (**secret**, see below). Not tested against a real Azure resource yet (C14). |
+| `AzureOpenAI` | `Chat:AzureOpenAI:Endpoint` (`https://<resource>.openai.azure.com/`), `Chat:AzureOpenAI:Deployment` (the deployment name, not the model name), `Chat:AzureOpenAI:ApiKey` (**secret**). All three in user secrets, see below. |
 
-The Azure key never goes in `appsettings.json`. Keep it in user secrets (stored outside the repo, loaded in Development):
-```bash
-dotnet user-secrets set "Chat:AzureOpenAI:ApiKey" "<key>" --project src/FinDoc.Api
-dotnet user-secrets list --project src/FinDoc.Api
-```
-or set the env var `Chat__AzureOpenAI__ApiKey`.
+**Run on Azure OpenAI:**
+1. An Azure OpenAI resource with a chat model deployment (Foundry). On Azure for Students, only some of the allowed regions offer OpenAI models (Korea Central, UAE North), and quota is per model: check it with `az cognitiveservices usage list -l <region>` before you pick one.
+2. The three settings in user secrets (stored outside the repo, loaded only in Development), so the public repo never names your resource and never holds the key:
+   ```bash
+   dotnet user-secrets set "Chat:AzureOpenAI:Endpoint" "https://<resource>.openai.azure.com/" --project src/FinDoc.Api
+   dotnet user-secrets set "Chat:AzureOpenAI:Deployment" "<deployment>" --project src/FinDoc.Api
+   dotnet user-secrets set "Chat:AzureOpenAI:ApiKey" "<key>" --project src/FinDoc.Api
+   ```
+   or the env vars `Chat__AzureOpenAI__Endpoint`, `Chat__AzureOpenAI__Deployment`, `Chat__AzureOpenAI__ApiKey`. The key never goes in `appsettings.json`.
+3. `Chat__Provider=AzureOpenAI dotnet run --project src/FinDoc.Api`. Retrieval still runs locally (Postgres + the Ollama embedding model); only the answer comes from Azure.
+
+Every answer logs the provider's token counts: `Model usage: <n> input tokens (<n> cached), <n> output tokens`. A deployment's rate limit counts both requests and tokens per minute; a request over either limit gets a 429.
 
 Logs: `appsettings.Development.json` sets `Microsoft.Extensions.AI` to `Debug` (a line when each model call starts and ends). Set it to `Trace` to also log the full messages and options sent to the model (contains user data, dev only).

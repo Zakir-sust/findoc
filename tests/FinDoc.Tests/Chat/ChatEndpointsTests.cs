@@ -76,6 +76,20 @@ public class ChatEndpointsTests
     }
 
     [Fact]
+    public async Task A_citation_with_the_bracket_moved_left_still_brings_back_its_source()
+    {
+        // C14: gpt-4.1-mini wrote this instead of the exact label, and the answer came back with "sources: []".
+        var (context, body) = NewHttpContext();
+        var chatClient = new FakeChatClient(["About 423.7 million shares ", "[sources-tesla-", "fy2025]-[Item 8]"]);
+
+        await Ask(context, new FakeRetriever([Item8, Item7]), chatClient);
+
+        var sources = SourcesEvent(ReadBody(body));
+        Assert.Contains($"\"label\":\"{Item8Label}\"", sources); // reported as the exact label sent
+        Assert.DoesNotContain("Item 7", sources);
+    }
+
+    [Fact]
     public async Task One_citation_brings_back_every_chunk_with_that_label()
     {
         var (context, body) = NewHttpContext();

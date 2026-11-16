@@ -68,8 +68,8 @@ public static class ChatClientSetup
         return new OllamaApiClient(http, ollama.Model);
     }
 
-    // NOT TESTED against a real Azure resource yet (block C14 does that and owns the key handling details).
-    // The key comes from user secrets or an env var, never from appsettings.json.
+    // Tested 15 Nov 2026 (C14) against a gpt-4.1-mini Global Standard deployment.
+    // Endpoint, deployment and key come from user secrets or env vars, never from appsettings.json.
     // AsIChatClient (Microsoft.Extensions.AI.OpenAI) adapts the OpenAI SDK's ChatClient to IChatClient;
     // on Azure the "model" is the deployment name.
     private static IChatClient CreateAzureOpenAIClient(AzureOpenAISettings azure) =>

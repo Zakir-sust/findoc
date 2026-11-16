@@ -98,17 +98,23 @@ public static class ChatEndpoints
         // 3. Stream the answer, keeping a copy: the citations can only be read once the whole answer is in
         //    (a label can arrive split across several token chunks).
         var answer = new StringBuilder();
+        UsageDetails? usage = null;
         try
         {
             await foreach (var update in chatClient.GetStreamingResponseAsync(messages, cancellationToken: ct))
             {
-                // Some updates carry no text (e.g. the last one, which only has the token usage).
+                // The provider reports the token counts once, usually in the last update (which has no text).
+                if (update.Contents.OfType<UsageContent>().FirstOrDefault() is { } usageContent)
+                    usage = usageContent.Details;
+
                 if (string.IsNullOrEmpty(update.Text))
                     continue;
 
                 answer.Append(update.Text);
                 await WriteEventAsync(response, eventName: null, new TokenEvent(update.Text), ct);
             }
+
+            LogUsage(logger, usage);
 
             // 4. The sources the answer cited, after the tokens (C13 spec). A refusal cites nothing: an empty list.
             await WriteEventAsync(response, "sources", CitedSources(answer.ToString(), chunks, logger), ct);
@@ -149,6 +155,23 @@ public static class ChatEndpoints
             .Where(c => cited.Contains(CitationPrompt.LabelFor(c)))
             .Select(c => new SourceEvent(CitationPrompt.LabelFor(c), c.Item, c.Content))
             .ToList();
+    }
+
+    /// <summary>
+    /// One line per answer with the provider's own token counts: what a hosted model bills for (C14).
+    /// Cached input = prompt tokens the provider served from its prompt cache (billed cheaper on Azure OpenAI).
+    /// C19 turns this into cost per request and the /stats page.
+    /// </summary>
+    private static void LogUsage(ILogger logger, UsageDetails? usage)
+    {
+        if (usage is null)
+        {
+            logger.LogInformation("The model reported no token usage for this answer.");
+            return;
+        }
+
+        logger.LogInformation("Model usage: {InputTokens} input tokens ({CachedInputTokens} cached), {OutputTokens} output tokens",
+            usage.InputTokenCount, usage.CachedInputTokenCount ?? 0, usage.OutputTokenCount);
     }
 
     /// <summary>

@@ -55,4 +55,24 @@ public class CitationPromptTests
             ["sources-[apple-fy2026]-[Item 8]", "sources-[amazon-fy2025]"],
             CitationPrompt.FindCitations(answer));
     }
+
+    [Fact]
+    public void FindCitations_reads_the_bracket_moved_left_as_the_exact_label()
+    {
+        // What gpt-4.1-mini wrote on Azure (C14), with and without an item, next to the exact form.
+        var answer = "About 423.7 million shares [sources-tesla-fy2025]-[Item 8], [sources-amazon-fy2025]. " +
+                     "Again: sources-[tesla-fy2025]-[Item 8]";
+
+        Assert.Equal(
+            ["sources-[tesla-fy2025]-[Item 8]", "sources-[amazon-fy2025]"],
+            CitationPrompt.FindCitations(answer));
+    }
+
+    [Fact]
+    public void FindCitations_reads_a_label_wrapped_in_extra_brackets()
+    {
+        Assert.Equal(
+            ["sources-[apple-fy2026]-[Item 7]"],
+            CitationPrompt.FindCitations("Revenue grew [sources-[apple-fy2026]-[Item 7]]."));
+    }
 }
