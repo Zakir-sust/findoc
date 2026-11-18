@@ -44,3 +44,6 @@ app.MapDocumentEndpoints();
 app.MapChatEndpoints();
 
 app.Run();
+
+// WebApplicationFactory<Program> in the C15 integration tests needs a public Program to point at.
+public partial class Program;
