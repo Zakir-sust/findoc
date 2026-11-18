@@ -15,7 +15,7 @@ pgvector), retrieval with a report filter works, and `/chat` streams a cited ans
 | `src/FinDoc.Core` | EF Core model (`Document`, `Chunk` with `vector(1024)` + HNSW cosine index), `ItemChunker`, `Retriever` (pgvector top-k + report filter), messaging contract. |
 | `tests/FinDoc.Tests` | xUnit tests. `Category=Integration` ones need the local stack + Ollama. |
 | `evals/` | `golden.draft.json`: 30 questions with the PDF page of each answer, **draft until checked**. |
-| `data/` | `metrics.draft.json`: 4 companies × revenue, net income, R&D, employees, with pages, **draft until checked**. |
+| `data/` | `metrics.json`: 4 companies × revenue, net income, R&D, employees, with pages, each row checked on its page (C16). |
 | `scripts/download-sources.sh` | Downloads the four 10-K PDFs from the companies' investor-relations sites into `sources/` (gitignored; PDFs are never committed). |
 | `docs/learned.md` | Learn-backs. |
 

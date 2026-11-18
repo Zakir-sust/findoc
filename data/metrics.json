@@ -1,6 +1,6 @@
 {
-  "_status": "DRAFT. Values copied by Claude from the PDFs' extracted text on 13 Nov 2026, each with the PDF page it came from (the page number in a PDF viewer, not the printed one). Not yet checked by you: C16 opens each page, confirms the value, and sets verified=true. Then rename this file to metrics.json.",
-  "_howToVerify": "Open sources/<report>.pdf at `page`, find the line, compare value and unit (most values are USD millions), fix anything wrong, set verified=true and say what you checked in verifiedNote.",
+  "_status": "Verified 18 Nov 2026 (C16). Values copied by Claude from the PDFs' extracted text on 13 Nov 2026, each with the PDF page it came from (the page number in a PDF viewer, not the printed one). Rows 1-10 (Apple, Alphabet, Amazon revenue + net income) checked by Jakir on the page; rows 11-15 (Amazon R&D + employees, Tesla) checked by Claude against the page text at Jakir's request. This is the table the get_financial_metric tool trusts.",
+  "_howToVerify": "To re-check a row: open sources/<report>.pdf at `page`, find the line, compare value, unit and year column. A changed row gets verified=false until re-checked.",
   "_shape": "One row per (company, metric) for the fiscal year of that company's latest 10-K. metric is one of revenue, net_income, rnd_expense, employees. value null = the report has no such line (see note). Fiscal years differ: Apple's ends in September.",
   "rows": [
     {
@@ -14,8 +14,8 @@
       "item": "Item 8",
       "page": 35,
       "note": "Total net sales. Also in Item 7 (p. 29): up 15% from 416,161.",
-      "verified": false,
-      "verifiedNote": null
+      "verified": true,
+      "verifiedNote": "shows on a table along with 2024 and 2025"
     },
     {
       "company": "Apple",
@@ -28,7 +28,7 @@
       "item": "Item 8",
       "page": 35,
       "note": "Fiscal 2025: 112,010.",
-      "verified": false,
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -42,7 +42,7 @@
       "item": "Item 8",
       "page": 35,
       "note": "Also in Item 7 (p. 30): up 32%, 10% of net sales.",
-      "verified": false,
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -56,8 +56,8 @@
       "item": "Item 1",
       "page": 8,
       "note": null,
-      "verified": false,
-      "verifiedNote": null
+      "verified": true,
+      "verifiedNote": "Approximate value"
     },
     {
       "company": "Alphabet",
@@ -70,7 +70,7 @@
       "item": "Item 7",
       "page": 34,
       "note": "Total revenues. 2024: 350,018.",
-      "verified": false,
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -84,7 +84,7 @@
       "item": "Item 7",
       "page": 33,
       "note": "Up 32,052 (32%) from 100,118.",
-      "verified": false,
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -98,7 +98,7 @@
       "item": "Item 7",
       "page": 36,
       "note": "15% of revenues; 2024: 49,326.",
-      "verified": false,
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -112,7 +112,7 @@
       "item": "Item 1",
       "page": 8,
       "note": null,
-      "verified": false,
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -125,8 +125,8 @@
       "unit": "USD millions",
       "item": "Item 8",
       "page": 48,
-      "note": "Total net sales. Amazon's columns run 2023, 2024, 2025 (oldest first, unlike the others).",
-      "verified": false,
+      "note": "Total net sales. Amazon's columns run 2023, 2024, 2025 (oldest first, like Alphabet's; Apple and Tesla run newest first).",
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -140,7 +140,7 @@
       "item": "Item 8",
       "page": 48,
       "note": "2024: 59,248.",
-      "verified": false,
+      "verified": true,
       "verifiedNote": null
     },
     {
@@ -153,9 +153,9 @@
       "unit": "USD millions",
       "item": "Item 8",
       "page": 48,
-      "note": "Amazon reports no R&D line. The nearest line, 'Technology and infrastructure', was 108,521. A correct tool answer says so instead of returning a number.",
-      "verified": false,
-      "verifiedNote": null
+      "note": "Amazon reports no R&D line. The nearest line, 'Technology and infrastructure', was 108,521. 'Research and development' appears only in tax notes (R&D tax credits; 'Capitalized research and development' 22,701 is a deferred tax item, p. 77), never as an expense. A correct tool answer says so instead of returning a number.",
+      "verified": true,
+      "verifiedNote": "Claude, 18 Nov: p. 48 (statement of operations) has no R&D line; Technology and infrastructure 108,521 in the 2025 column."
     },
     {
       "company": "Amazon",
@@ -168,8 +168,8 @@
       "item": "Item 1",
       "page": 15,
       "note": null,
-      "verified": false,
-      "verifiedNote": null
+      "verified": true,
+      "verifiedNote": "Claude, 18 Nov: p. 15, Item 1: 'approximately 1,576,000 full-time and part-time employees' as of December 31, 2025. Approximate."
     },
     {
       "company": "Tesla",
@@ -182,8 +182,8 @@
       "item": "Item 8",
       "page": 53,
       "note": "Total revenues, down from 97,690 in 2024.",
-      "verified": false,
-      "verifiedNote": null
+      "verified": true,
+      "verifiedNote": "Claude, 18 Nov: p. 53, statement of operations, 2025 column (newest first): Total revenues 94,827."
     },
     {
       "company": "Tesla",
@@ -191,13 +191,13 @@
       "fiscalYear": 2025,
       "fiscalYearEnd": "2025-12-31",
       "metric": "net_income",
-      "value": 3855,
+      "value": 3794,
       "unit": "USD millions",
       "item": "Item 8",
       "page": 53,
-      "note": "Net income attributable to common stockholders: 3,794. 2024: 7,153.",
-      "verified": false,
-      "verifiedNote": null
+      "note": "Net income attributable to common stockholders (comparable with the other three, which have no noncontrolling interests). Consolidated net income, including 61 for noncontrolling interests: 3,855. 2024: 7,091 (attributable).",
+      "verified": true,
+      "verifiedNote": "Claude, 18 Nov: p. 53, 2025 column: Net income attributable to common stockholders 3,794 (Net income 3,855). Switched from 3,855 to 3,794 at Jakir's call."
     },
     {
       "company": "Tesla",
@@ -210,8 +210,8 @@
       "item": "Item 8",
       "page": 53,
       "note": "2024: 4,540.",
-      "verified": false,
-      "verifiedNote": null
+      "verified": true,
+      "verifiedNote": "Claude, 18 Nov: p. 53, operating expenses, 2025 column: Research and development 6,411."
     }
   ]
 }
