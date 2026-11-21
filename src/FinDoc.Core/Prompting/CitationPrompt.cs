@@ -26,16 +26,24 @@ public static partial class CitationPrompt
         "Calculating from the numbers in the sources is permitted to build the answer.",
         "Give decimal answers to 2 decimal places.",
         "Cite with the label at the top of each source, exactly as written, for example sources-[apple-fy2026]-[Item 8]. For several sources, separate the labels with commas.",
+        // C17: the tool's result counts as a source, and its label is ready-made (Jakir's rule 4: cite every number taken from a source).
+        "A get_financial_metric result is a source too: cite it with the label in its citation field.",
+        // C17 (Claude's wording, option 1 chosen by Jakir): 3 of 3 runs on qwen3.5 skipped the tool and read the
+        // number from the Item 8 chunk (which also shows the two earlier years). A "wins" rule only matters after a call.
+        "For revenue, net income, R&D expense or employees, always call get_financial_metric first, even when a source shows the number.",
+        // C17 (Jakir's rule, G38): the tool reads the checked table, a chunk can hold several years' columns.
+        "The get_financial_metric tool's number wins over the sources: quote it exactly.",
         $"If the answer can't be derived from the sources in any way, say \"{Refusal}\".");
 
     /// <summary>
     /// The citation for a chunk: <c>sources-[apple-fy2026]-[Item 8]</c>, or <c>sources-[amazon-fy2025]</c>
     /// for a chunk with no item (cover pages and the like: 27 of the 610 chunks).
     /// </summary>
-    public static string LabelFor(RetrievedChunk chunk) => Label(chunk.Report, chunk.Item);
+    public static string LabelFor(RetrievedChunk chunk) => LabelFor(chunk.Report, chunk.Item);
 
-    // The one place the label format lives: the prompt's labels and the citations read back both come from here.
-    private static string Label(string report, string? item) =>
+    // The one place the label format lives: the prompt's labels, the citations read back and the
+    // get_financial_metric results (C17) all come from here.
+    public static string LabelFor(string report, string? item) =>
         item is null ? $"sources-[{report}]" : $"sources-[{report}]-[{item}]";
 
     public static List<ChatMessage> Build(string question, IReadOnlyList<RetrievedChunk> chunks)
@@ -73,7 +81,7 @@ public static partial class CitationPrompt
     /// </remarks>
     public static IReadOnlyList<string> FindCitations(string answer) =>
         CitationPattern().Matches(answer)
-            .Select(m => Label(m.Groups["report"].Value, m.Groups["item"].Success ? m.Groups["item"].Value : null))
+            .Select(m => LabelFor(m.Groups["report"].Value, m.Groups["item"].Success ? m.Groups["item"].Value : null))
             .Distinct()
             .ToList();
 

@@ -21,7 +21,7 @@ public static class ChatClientSetup
 
         // AddChatClient registers the provider's client and returns a ChatClientBuilder. Each layer added to the
         // builder wraps the client; the first one added is the outermost. A request goes:
-        //   ConfigureOptions (Ollama only) -> UseLogging -> provider client
+        //   ConfigureOptions (Ollama only) -> UseFunctionInvocation -> UseLogging -> provider client
         var pipeline = settings.Provider switch
         {
             ChatProvider.Ollama => services
@@ -31,6 +31,12 @@ public static class ChatClientSetup
                 .AddChatClient(CreateAzureOpenAIClient(settings.AzureOpenAI)),
             _ => throw new InvalidOperationException($"Unknown Chat:Provider '{settings.Provider}'."),
         };
+
+        // UseFunctionInvocation (C17): when the model answers with a tool call instead of text, this layer runs the
+        // tool (get_financial_metric, offered per request in ChatOptions.Tools), adds the call and its result to the
+        // messages and calls the model again. At most 3 rounds per question, so a model that keeps calling stops.
+        // It sits outside UseLogging, so each round trip to the model is logged on its own.
+        pipeline.UseFunctionInvocation(configure: client => client.MaximumIterationsPerRequest = 3);
 
         // UseLogging: logs "GetStreamingResponseAsync invoked/completed" at Debug, and at Trace also the full
         // messages and options sent (so you can see the real prompt). Trace contains user data: dev only.

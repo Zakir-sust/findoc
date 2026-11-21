@@ -1,12 +1,15 @@
 using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using FinDoc.Api.Chat;
+using FinDoc.Core.Metrics;
 using FinDoc.Core.Retrieval;
+using FinDoc.Tests.Metrics;
 
 namespace FinDoc.Tests.Chat;
 
@@ -170,6 +173,31 @@ public class ChatEndpointsTests
         Assert.Equal("", ReadBody(body)); // no error event: nobody is there to read it, and it isn't a server error
     }
 
+    [Fact]
+    public async Task A_number_question_runs_the_tool_and_its_citation_comes_back_as_a_source()
+    {
+        // The real function-invocation layer around a fake model: call 1 asks for the tool, call 2 answers from its result.
+        var (context, body) = NewHttpContext();
+        var model = new ToolCallingChatClient();
+
+        await Ask(context, new FakeRetriever([Item8]), new FunctionInvokingChatClient(model), question: "Apple's net income in fiscal 2026?");
+
+        Assert.Equal(2, model.Calls);
+        Assert.Equal("get_financial_metric", Assert.Single(model.ToolsOffered!).Name);
+
+        // What went back to the model in call 2: the table row, with the label to cite.
+        var toolResult = Assert.Single(model.SecondCallMessages!.SelectMany(m => m.Contents).OfType<FunctionResultContent>());
+        var resultJson = JsonSerializer.Serialize(toolResult.Result, FinancialMetricTool.JsonOptions);
+        Assert.Contains("\"value\":132175", resultJson);
+        Assert.Contains("\"citation\":\"sources-[apple-fy2026]-[Item 8]\"", resultJson);
+
+        // No Apple chunk was retrieved, yet the citation is real: it came from the tool, so it isn't dropped as made up.
+        var sources = SourcesEvent(ReadBody(body));
+        Assert.Contains("\"label\":\"sources-[apple-fy2026]-[Item 8]\"", sources);
+        Assert.Contains("get_financial_metric: Apple net_income, fiscal 2026 = 132175 USD millions", sources);
+        Assert.DoesNotContain("tesla", sources); // the Tesla chunk was sent but not cited
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -180,17 +208,19 @@ public class ChatEndpointsTests
         var retriever = new FakeRetriever([Item8]);
 
         var result = await ChatEndpoints.StreamAnswerAsync(
-            new ChatRequest(question, null), retriever, new FakeChatClient([]), NullLoggerFactory.Instance, context);
+            new ChatRequest(question, null), retriever, new FakeChatClient([]), MetricTool, NullLoggerFactory.Instance, context);
 
         Assert.IsType<BadRequest<string>>(result);
         Assert.Equal("", ReadBody(body)); // nothing streamed
         Assert.Null(retriever.Question);  // nothing searched
     }
 
+    private static readonly FinancialMetricTool MetricTool = FinancialMetricToolTests.NewTool();
+
     private static Task<IResult> Ask(
         HttpContext context, IRetriever retriever, IChatClient chatClient,
         string question = "How many shares were granted?", string? report = null) =>
-        ChatEndpoints.StreamAnswerAsync(new ChatRequest(question, report), retriever, chatClient, NullLoggerFactory.Instance, context);
+        ChatEndpoints.StreamAnswerAsync(new ChatRequest(question, report), retriever, chatClient, MetricTool, NullLoggerFactory.Instance, context);
 
     private static (DefaultHttpContext Context, MemoryStream Body) NewHttpContext()
     {
@@ -230,6 +260,46 @@ public class ChatEndpointsTests
     }
 
     private sealed class FakeDbException() : DbException("Connection refused");
+
+    /// <summary>
+    /// A fake model that uses the tool: call 1 streams a get_financial_metric call (no text), call 2 sees the
+    /// result in its messages and streams a cited answer. Records the tools offered and call 2's messages.
+    /// </summary>
+    private sealed class ToolCallingChatClient : IChatClient
+    {
+        public int Calls { get; private set; }
+        public IList<AITool>? ToolsOffered { get; private set; }
+        public List<ChatMessage>? SecondCallMessages { get; private set; }
+
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+            IEnumerable<ChatMessage> messages,
+            ChatOptions? options = null,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            await Task.Yield();
+
+            if (Calls == 1)
+            {
+                ToolsOffered = options?.Tools;
+                var arguments = new Dictionary<string, object?> { ["company"] = "Apple", ["metric"] = "net_income", ["fiscalYear"] = 2026 };
+                yield return new ChatResponseUpdate(ChatRole.Assistant, [new FunctionCallContent("call-1", "get_financial_metric", arguments)]);
+                yield break;
+            }
+
+            SecondCallMessages = messages.ToList();
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "Apple's net income in fiscal 2026 was 132,175 USD millions ");
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "sources-[apple-fy2026]-[Item 8]");
+        }
+
+        public Task<ChatResponse> GetResponseAsync(
+            IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException("/chat only streams.");
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
+    }
 
     /// <summary>Streams the given chunks as if a model produced them and records the messages it was sent.</summary>
     private sealed class FakeChatClient(string[] chunks, bool failAfterChunks = false) : IChatClient

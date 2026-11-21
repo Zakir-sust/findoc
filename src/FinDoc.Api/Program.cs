@@ -6,6 +6,7 @@ using FinDoc.Api.Documents;
 using FinDoc.Api.Messaging;
 using FinDoc.Core.Data;
 using FinDoc.Core.Messaging;
+using FinDoc.Core.Metrics;
 using FinDoc.Core.Retrieval;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,11 @@ builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(new
     new Uri(embeddings["Endpoint"] ?? throw new InvalidOperationException("Missing Embeddings:Endpoint.")),
     embeddings["Model"] ?? throw new InvalidOperationException("Missing Embeddings:Model.")));
 builder.Services.AddScoped<IRetriever, Retriever>(); // scoped like the DbContext it uses
+
+// get_financial_metric for POST /chat (C17): reads the table checked in C16. The build copies data/metrics.json
+// next to the API's dll, so the path doesn't depend on the folder `dotnet run` starts in.
+builder.Services.AddSingleton(MetricsTable.Load(Path.Combine(AppContext.BaseDirectory, "data", "metrics.json")));
+builder.Services.AddSingleton<FinancialMetricTool>();
 
 // IChatClient for POST /chat: Ollama or Azure OpenAI, picked by Chat:Provider. Stops start-up if its settings are missing.
 builder.Services.AddFinDocChatClient(builder.Configuration);

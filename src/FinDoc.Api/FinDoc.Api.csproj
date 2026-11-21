@@ -6,6 +6,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The checked metrics table (C16) for get_financial_metric (C17), copied to bin/.../data/metrics.json.
+         Projects that reference the API (the tests) get the copy too. -->
+    <None Include="..\..\data\metrics.json" Link="data\metrics.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" Version="2.9.0-beta.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

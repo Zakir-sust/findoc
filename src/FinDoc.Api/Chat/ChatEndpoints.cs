@@ -4,6 +4,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.AI;
+using FinDoc.Core.Metrics;
 using FinDoc.Core.Prompting;
 using FinDoc.Core.Retrieval;
 
@@ -40,7 +41,8 @@ public static class ChatEndpoints
     }
 
     /// <summary>
-    /// Answers from the reports as Server-Sent Events: the top-k chunks → the C12 citation prompt → the model.
+    /// Answers from the reports as Server-Sent Events: the top-k chunks → the C12 citation prompt → the model,
+    /// which may call get_financial_metric (C17) before it answers.
     /// Events: one <c>data:</c> per token chunk, then <c>event: sources</c> (the chunks the answer cited), then
     /// <c>event: done</c>. A failure after the stream has opened ends it with <c>event: error</c> instead.
     /// </summary>
@@ -49,7 +51,8 @@ public static class ChatEndpoints
     /// Internal so the unit tests can call it with a fake IRetriever and IChatClient.
     /// </remarks>
     internal static async Task<IResult> StreamAnswerAsync(
-        ChatRequest request, IRetriever retriever, IChatClient chatClient, ILoggerFactory loggerFactory, HttpContext httpContext)
+        ChatRequest request, IRetriever retriever, IChatClient chatClient, FinancialMetricTool metricTool,
+        ILoggerFactory loggerFactory, HttpContext httpContext)
     {
         if (string.IsNullOrWhiteSpace(request.Question))
             return Results.BadRequest("The question is empty.");
@@ -95,17 +98,28 @@ public static class ChatEndpoints
         // 2. The C12 prompt: labelled sources + the question.
         var messages = CitationPrompt.Build(request.Question, chunks);
 
-        // 3. Stream the answer, keeping a copy: the citations can only be read once the whole answer is in
+        // 3. Offer the tool (C17). The model decides whether to call it; the function-invocation layer in the
+        //    pipeline runs it and calls the model again. A call and its result arrive as updates with no text.
+        var options = new ChatOptions { Tools = [metricTool.Function] };
+
+        // 4. Stream the answer, keeping a copy: the citations can only be read once the whole answer is in
         //    (a label can arrive split across several token chunks).
         var answer = new StringBuilder();
+        var toolResults = new List<MetricResult>();
         UsageDetails? usage = null;
         try
         {
-            await foreach (var update in chatClient.GetStreamingResponseAsync(messages, cancellationToken: ct))
+            await foreach (var update in chatClient.GetStreamingResponseAsync(messages, options, ct))
             {
-                // The provider reports the token counts once, usually in the last update (which has no text).
-                if (update.Contents.OfType<UsageContent>().FirstOrDefault() is { } usageContent)
-                    usage = usageContent.Details;
+                // Each model call reports its token counts once, usually in its last update (which has no text).
+                // A tool call means two model calls, so they are added up: both are billed.
+                foreach (var usageContent in update.Contents.OfType<UsageContent>())
+                    (usage ??= new UsageDetails()).Add(usageContent.Details);
+
+                // What get_financial_metric returned: its citation label counts as a source sent (step 5).
+                foreach (var functionResult in update.Contents.OfType<FunctionResultContent>())
+                    if (ReadMetricResult(functionResult.Result) is { } metric)
+                        toolResults.Add(metric);
 
                 if (string.IsNullOrEmpty(update.Text))
                     continue;
@@ -116,8 +130,8 @@ public static class ChatEndpoints
 
             LogUsage(logger, usage);
 
-            // 4. The sources the answer cited, after the tokens (C13 spec). A refusal cites nothing: an empty list.
-            await WriteEventAsync(response, "sources", CitedSources(answer.ToString(), chunks, logger), ct);
+            // 5. The sources the answer cited, after the tokens (C13 spec). A refusal cites nothing: an empty list.
+            await WriteEventAsync(response, "sources", CitedSources(answer.ToString(), chunks, toolResults, logger), ct);
 
             // EventSource drops an event that has no data line, so "done" carries an empty object.
             await WriteEventAsync(response, "done", new { }, ct);
@@ -138,24 +152,43 @@ public static class ChatEndpoints
     }
 
     /// <summary>
-    /// Every chunk whose label the answer cites, nearest first, with its item and text (for the sources panel, C26).
+    /// Every chunk whose label the answer cites, nearest first, with its item and text (for the sources panel, C26),
+    /// then every get_financial_metric result it cites (C17), with the table row as its text.
     /// Two chunks from the same item share a label, so one citation can bring back both.
-    /// A citation that matches no label sent is made up: logged, never sent to the client (C13 spec).
+    /// A citation that matches no label sent (no chunk, no tool result) is made up: logged, never sent to the client (C13 spec).
     /// </summary>
-    internal static List<SourceEvent> CitedSources(string answer, IReadOnlyList<RetrievedChunk> chunks, ILogger logger)
+    internal static List<SourceEvent> CitedSources(
+        string answer, IReadOnlyList<RetrievedChunk> chunks, IReadOnlyList<MetricResult> toolResults, ILogger logger)
     {
         var cited = CitationPrompt.FindCitations(answer).ToHashSet();
-        var sent = chunks.Select(CitationPrompt.LabelFor).ToHashSet();
+        var found = toolResults.Where(r => r is { Found: true, Citation: not null }).ToList();
+        var sent = chunks.Select(CitationPrompt.LabelFor).Concat(found.Select(r => r.Citation!)).ToHashSet();
 
         var madeUp = cited.Except(sent).ToList();
         if (madeUp.Count > 0)
             logger.LogWarning("The answer cited labels that were not sent (dropped): {Labels}", string.Join(", ", madeUp));
 
-        return chunks
+        var fromChunks = chunks
             .Where(c => cited.Contains(CitationPrompt.LabelFor(c)))
-            .Select(c => new SourceEvent(CitationPrompt.LabelFor(c), c.Item, c.Content))
-            .ToList();
+            .Select(c => new SourceEvent(CitationPrompt.LabelFor(c), c.Item, c.Content));
+        var fromTool = found
+            .Where(r => cited.Contains(r.Citation!))
+            .Select(r => new SourceEvent(r.Citation!, r.Item,
+                $"{FinancialMetricTool.Name}: {r.Company} {r.Metric}, fiscal {r.FiscalYear} = {r.Value} {r.Unit}"));
+
+        return fromChunks.Concat(fromTool).ToList();
     }
+
+    /// <summary>
+    /// A get_financial_metric result as it comes back in the stream: the result object itself, or its JSON
+    /// (MEAI serializes a function's return value). A failed call carries an error message instead: ignored here.
+    /// </summary>
+    private static MetricResult? ReadMetricResult(object? result) => result switch
+    {
+        MetricResult metric => metric,
+        JsonElement { ValueKind: JsonValueKind.Object } json => json.Deserialize<MetricResult>(FinancialMetricTool.JsonOptions),
+        _ => null,
+    };
 
     /// <summary>
     /// One line per answer with the provider's own token counts: what a hosted model bills for (C14).
